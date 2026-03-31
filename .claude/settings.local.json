@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude install:*)",
+      "Bash(npm --version)",
+      "Bash(npm create:*)",
+      "Bash(/Users/kuike/Desktop/EPC-CP/client/package.json:*)",
+      "Bash(npm install:*)",
+      "Bash(node server/seed.js)",
+      "Bash(timeout 8 node server/server.js)",
+      "Bash(npm run:*)",
+      "Bash(openssl rand:*)",
+      "Bash(lsof -i:5000)",
+      "Bash(ls:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
