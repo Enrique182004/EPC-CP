@@ -4,6 +4,14 @@ const { sendMail } = require("../config/mailer");
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 const THRESHOLDS = [
   { days: 180, label: "6_months" },
   { days: 90, label: "3_months" },
@@ -71,9 +79,9 @@ async function checkExpirations() {
       const alertType = `malpractice_${label}`;
       if (!AlertLog.wasAlertSent(row.id, alertType, row.ins_id)) {
         const subject = `ALERT: Malpractice Insurance Expiring - Dr. ${row.last_name}`;
-        const body = `<p>Dr. <strong>${row.first_name} ${row.last_name}</strong>'s malpractice insurance with <strong>${row.carrier_name}</strong> expires on <strong>${row.expiration_date}</strong>.</p><p>Please renew before expiration to maintain credentialing status.</p>`;
+        const body = `<p>Dr. <strong>${escapeHtml(row.first_name)} ${escapeHtml(row.last_name)}</strong>'s malpractice insurance with <strong>${escapeHtml(row.carrier_name)}</strong> expires on <strong>${escapeHtml(row.expiration_date)}</strong>.</p><p>Please renew before expiration to maintain credentialing status.</p>`;
         const html = emailHtml(
-          `Malpractice Insurance Expiration Warning (${label.replace("_", " ")})`,
+          `Malpractice Insurance Expiration Warning (${label.replace(/_/g, " ")})`,
           body,
         );
 
@@ -101,9 +109,9 @@ async function checkExpirations() {
       const alertType = `license_${label}_${row.pid_id}`;
       if (!AlertLog.wasAlertSent(row.id, alertType, row.pid_id)) {
         const subject = `ALERT: ${row.id_type} Expiring - Dr. ${row.last_name}`;
-        const body = `<p>Dr. <strong>${row.first_name} ${row.last_name}</strong>'s <strong>${row.id_type}</strong> expires on <strong>${row.expiration_date}</strong>.</p><p>Please renew promptly.</p>`;
+        const body = `<p>Dr. <strong>${escapeHtml(row.first_name)} ${escapeHtml(row.last_name)}</strong>'s <strong>${escapeHtml(row.id_type)}</strong> expires on <strong>${escapeHtml(row.expiration_date)}</strong>.</p><p>Please renew promptly.</p>`;
         const html = emailHtml(
-          `${row.id_type} Expiration Warning (${label.replace("_", " ")})`,
+          `${escapeHtml(row.id_type)} Expiration Warning (${label.replace(/_/g, " ")})`,
           body,
         );
 
@@ -131,9 +139,9 @@ async function checkExpirations() {
       const alertType = `recredentialing_${label}`;
       if (!AlertLog.wasAlertSent(row.id, alertType, null)) {
         const subject = `REMINDER: Re-credentialing Due - Dr. ${row.last_name}`;
-        const body = `<p>Dr. <strong>${row.first_name} ${row.last_name}</strong>'s re-credentialing is due on <strong>${row.recredentialing_due_date}</strong>.</p><p>Please initiate the re-credentialing process soon.</p>`;
+        const body = `<p>Dr. <strong>${escapeHtml(row.first_name)} ${escapeHtml(row.last_name)}</strong>'s re-credentialing is due on <strong>${escapeHtml(row.recredentialing_due_date)}</strong>.</p><p>Please initiate the re-credentialing process soon.</p>`;
         const html = emailHtml(
-          `Re-credentialing Reminder (${label.replace("_", " ")})`,
+          `Re-credentialing Reminder (${label.replace(/_/g, " ")})`,
           body,
         );
 
@@ -160,13 +168,33 @@ async function checkExpirations() {
 
 async function sendMissingFormsReminder(doctor, missingForms, workerEmail) {
   const doctorEmail = doctor.personal_email || doctor.work_email;
-  const formList = missingForms.map((f) => `<li>${f}</li>`).join("");
-  const body = `<p>The following documents are still missing for Dr. <strong>${doctor.first_name} ${doctor.last_name}</strong>:</p><ul>${formList}</ul><p>Please provide these documents as soon as possible.</p>`;
+  const formList = missingForms.map((f) => `<li>${escapeHtml(f)}</li>`).join("");
+  const body = `<p>The following documents are still missing for Dr. <strong>${escapeHtml(doctor.first_name)} ${escapeHtml(doctor.last_name)}</strong>:</p><ul>${formList}</ul><p>Please provide these documents as soon as possible.</p>`;
   const html = emailHtml("Missing Credentialing Documents", body);
   const subject = `Action Required: Missing Documents - Dr. ${doctor.last_name}`;
 
-  if (doctorEmail) await sendMail({ to: doctorEmail, subject, html });
-  if (workerEmail) await sendMail({ to: workerEmail, subject, html });
+  const recipients = [...new Set([doctorEmail, workerEmail].filter(Boolean))];
+  for (const email of recipients) {
+    try {
+      await sendMail({ to: email, subject, html });
+      AlertLog.log({
+        doctor_id: doctor.id,
+        alert_type: "missing_forms_reminder",
+        subject_id: null,
+        recipient_email: email,
+        success: true,
+      });
+    } catch (err) {
+      AlertLog.log({
+        doctor_id: doctor.id,
+        alert_type: "missing_forms_reminder",
+        subject_id: null,
+        recipient_email: email,
+        success: false,
+        error_message: err.message,
+      });
+    }
+  }
 }
 
 module.exports = { checkExpirations, sendMissingFormsReminder };

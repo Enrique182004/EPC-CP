@@ -36,6 +36,11 @@ router.get("/missing-forms", authenticate, (req, res, next) => {
 router.post("/advance", authenticate, async (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
+    const doctor = Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to modify this workflow" });
+    }
     const instance = Workflow.getInstance(doctorId);
     if (!instance) return res.status(404).json({ error: "Workflow not found" });
     if (instance.status === "complete")
@@ -74,6 +79,11 @@ router.patch("/step/:stepId", authenticate, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const stepId = parseInt(req.params.stepId);
+    const doctor = Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to modify this workflow" });
+    }
     const instance = Workflow.getInstance(doctorId);
     if (!instance) return res.status(404).json({ error: "Workflow not found" });
     Workflow.updateStep(instance.id, stepId, {

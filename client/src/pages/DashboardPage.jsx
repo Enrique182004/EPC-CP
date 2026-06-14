@@ -129,7 +129,7 @@ export default function DashboardPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {allExpiring.slice(0, 10).map((r, i) => {
+              {allExpiring.slice(0, 10).map((r) => {
                 const urgency =
                   r.days_until <= 30
                     ? "red"
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                       : "green";
                 return (
                   <div
-                    key={i}
+                    key={`${r.type}-${r.id}-${r.date}`}
                     className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                   >
                     <div>

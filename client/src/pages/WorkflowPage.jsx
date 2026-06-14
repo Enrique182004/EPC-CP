@@ -22,6 +22,7 @@ export default function WorkflowPage() {
   const qc = useQueryClient();
   const [notes, setNotes] = useState({});
   const [advancing, setAdvancing] = useState(false);
+  const [updatingStep, setUpdatingStep] = useState(null);
   const [msg, setMsg] = useState("");
 
   const { data: doctor } = useQuery({
@@ -38,11 +39,24 @@ export default function WorkflowPage() {
   });
 
   const handleStepUpdate = async (step, status) => {
-    await workflow.updateStep(id, step.step_id, {
-      status,
-      notes: notes[step.step_id],
-    });
-    qc.invalidateQueries(["workflow", id]);
+    setUpdatingStep(step.step_id);
+    try {
+      await workflow.updateStep(id, step.step_id, {
+        status,
+        notes: notes[step.step_id],
+      });
+      setNotes((n) => {
+        const copy = { ...n };
+        delete copy[step.step_id];
+        return copy;
+      });
+      qc.invalidateQueries(["workflow", id]);
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Failed to update step");
+      setTimeout(() => setMsg(""), 4000);
+    } finally {
+      setUpdatingStep(null);
+    }
   };
 
   const handleAdvance = async () => {
@@ -227,6 +241,7 @@ export default function WorkflowPage() {
                     <select
                       className="input w-36 py-1 text-xs"
                       value={step.status}
+                      disabled={updatingStep === step.step_id}
                       onChange={(e) => handleStepUpdate(step, e.target.value)}
                     >
                       <option value="pending">Pending</option>
