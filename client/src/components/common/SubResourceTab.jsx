@@ -57,7 +57,9 @@ export default function SubResourceTab({
     try {
       await deleteFn(rowId);
       qc.invalidateQueries(queryKey);
-    } catch {}
+    } catch (err) {
+      setError(err.response?.data?.error || "Delete failed");
+    }
   };
 
   const handleStartAdd = () => {

@@ -27,13 +27,24 @@ const findById = (id) =>
     )
     .get(id);
 
+const ALLOWED_CREATE_FIELDS = [
+  "first_name", "middle_name", "last_name", "suffix",
+  "date_of_birth", "ssn_last4", "gender",
+  "home_address", "home_city", "home_state", "home_zip",
+  "home_phone", "cell_phone", "personal_email",
+  "npi", "caqh_id", "work_email", "primary_specialty",
+  "credentialing_status", "assigned_worker_id",
+  "tdi_completed", "recredentialing_due_date", "notes",
+];
+
 const create = (fields) => {
-  const cols = Object.keys(fields);
-  const vals = Object.values(fields);
-  const stmt = db.prepare(
-    `INSERT INTO doctors (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})`,
-  );
-  return stmt.run(...vals);
+  const cols = ALLOWED_CREATE_FIELDS.filter((k) => fields[k] !== undefined);
+  const vals = cols.map((k) => fields[k]);
+  return db
+    .prepare(
+      `INSERT INTO doctors (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})`,
+    )
+    .run(...vals);
 };
 
 const update = (id, fields) => {

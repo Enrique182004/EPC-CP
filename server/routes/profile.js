@@ -58,10 +58,17 @@ function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
       if (!sets.length)
         return res.status(400).json({ error: "No fields to update" });
       sets.push("updated_at = CURRENT_TIMESTAMP");
+      const doctorId = parseInt(req.params.id);
       db.prepare(
         `UPDATE ${table} SET ${sets.join(", ")} WHERE id = ? AND ${doctorForeignKey} = ?`,
-      ).run(...vals, subId, parseInt(req.params.id));
-      res.json(db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(subId));
+      ).run(...vals, subId, doctorId);
+      const updated = db
+        .prepare(
+          `SELECT * FROM ${table} WHERE id = ? AND ${doctorForeignKey} = ?`,
+        )
+        .get(subId, doctorId);
+      if (!updated) return res.status(404).json({ error: "Record not found" });
+      res.json(updated);
     } catch (err) {
       next(err);
     }
@@ -69,9 +76,13 @@ function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
 
   r.delete("/:subId", authenticate, (req, res, next) => {
     try {
-      db.prepare(
-        `DELETE FROM ${table} WHERE id = ? AND ${doctorForeignKey} = ?`,
-      ).run(parseInt(req.params.subId), parseInt(req.params.id));
+      const info = db
+        .prepare(
+          `DELETE FROM ${table} WHERE id = ? AND ${doctorForeignKey} = ?`,
+        )
+        .run(parseInt(req.params.subId), parseInt(req.params.id));
+      if (info.changes === 0)
+        return res.status(404).json({ error: "Record not found" });
       res.json({ message: "Deleted" });
     } catch (err) {
       next(err);

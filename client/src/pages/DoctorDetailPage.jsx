@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { doctors, auth as authApi } from "../api/index.js";
@@ -45,8 +45,11 @@ export default function DoctorDetailPage() {
     queryKey: ["doctor", id],
     queryFn: () => doctors.get(id),
     enabled: !isNew,
-    onSuccess: (d) => setForm(d),
   });
+
+  useEffect(() => {
+    if (doctor) setForm(doctor);
+  }, [doctor]);
 
   const { data: workers = [] } = useQuery({
     queryKey: ["users"],

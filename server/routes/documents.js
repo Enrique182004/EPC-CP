@@ -8,23 +8,55 @@ const { authenticate } = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
 
+const ALLOWED_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    const doctorId = parseInt(req.params.id);
+    if (!doctorId)
+      return cb(new Error("Invalid doctor ID"));
     const dir = path.join(
       __dirname,
       "../uploads",
-      req.params.id,
+      String(doctorId),
       req.params.type,
     );
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, `${Date.now()}${ext}`);
   },
 });
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+
+const fileFilter = (req, file, cb) => {
+  if (ALLOWED_MIME_TYPES.has(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Invalid file type. Only PDF, images, and Office documents are allowed.",
+      ),
+    );
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 
 // GET /api/doctors/:id/documents
 router.get("/", authenticate, (req, res, next) => {
