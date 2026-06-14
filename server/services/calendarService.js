@@ -1,8 +1,15 @@
-const { getCalendar } = require('../config/googleCalendar');
-const CalendarEvent = require('../models/CalendarEvent');
-const User = require('../models/User');
+const { getCalendar } = require("../config/googleCalendar");
+const CalendarEvent = require("../models/CalendarEvent");
+const User = require("../models/User");
 
-async function createEvent({ userId, doctorId, event_type, title, description, event_date }) {
+async function createEvent({
+  userId,
+  doctorId,
+  event_type,
+  title,
+  description,
+  event_date,
+}) {
   const user = User.findById(userId);
   let googleEventId = null;
 
@@ -10,7 +17,7 @@ async function createEvent({ userId, doctorId, event_type, title, description, e
     try {
       const calendar = getCalendar(user.google_refresh_token);
       const event = await calendar.events.insert({
-        calendarId: 'primary',
+        calendarId: "primary",
         requestBody: {
           summary: title,
           description,
@@ -19,15 +26,18 @@ async function createEvent({ userId, doctorId, event_type, title, description, e
           reminders: {
             useDefault: false,
             overrides: [
-              { method: 'email', minutes: 24 * 60 * 7 },
-              { method: 'popup', minutes: 24 * 60 },
+              { method: "email", minutes: 24 * 60 * 7 },
+              { method: "popup", minutes: 24 * 60 },
             ],
           },
         },
       });
       googleEventId = event.data.id;
     } catch (err) {
-      console.error('[CalendarService] Failed to create Google event:', err.message);
+      console.error(
+        "[CalendarService] Failed to create Google event:",
+        err.message,
+      );
     }
   }
 
@@ -45,8 +55,10 @@ async function createEvent({ userId, doctorId, event_type, title, description, e
 }
 
 async function deleteEvent(eventId, userId) {
-  const db = require('../config/database');
-  const ce = db.prepare('SELECT * FROM calendar_events WHERE id = ?').get(eventId);
+  const db = require("../config/database");
+  const ce = db
+    .prepare("SELECT * FROM calendar_events WHERE id = ?")
+    .get(eventId);
   if (!ce) return;
 
   if (ce.google_event_id && userId) {
@@ -54,9 +66,15 @@ async function deleteEvent(eventId, userId) {
     if (user && user.google_refresh_token) {
       try {
         const calendar = getCalendar(user.google_refresh_token);
-        await calendar.events.delete({ calendarId: 'primary', eventId: ce.google_event_id });
+        await calendar.events.delete({
+          calendarId: "primary",
+          eventId: ce.google_event_id,
+        });
       } catch (err) {
-        console.error('[CalendarService] Failed to delete Google event:', err.message);
+        console.error(
+          "[CalendarService] Failed to delete Google event:",
+          err.message,
+        );
       }
     }
   }

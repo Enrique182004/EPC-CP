@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar.jsx'
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar.jsx";
 
 export default function AppShell() {
   return (
@@ -11,5 +11,5 @@ export default function AppShell() {
         </div>
       </main>
     </div>
-  )
+  );
 }

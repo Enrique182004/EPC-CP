@@ -3,26 +3,32 @@
 ## Quick Start
 
 ### 1. Install dependencies (first time only)
+
 ```bash
 npm run install:all
 ```
 
 ### 2. Set up environment
+
 Edit `server/.env` — configure SMTP and Google Calendar if needed (optional for local dev).
 
 ### 3. Seed the database (first time only)
+
 ```bash
 cd server && node seed.js
 ```
 
 ### 4. Start development servers
+
 ```bash
 npm run dev
 ```
+
 - Backend: http://localhost:5000
 - Frontend: http://localhost:5173
 
 ### Default Login
+
 - Email: `admin@epc.local`
 - Password: `Admin1234!`
 - **Change this password after first login via Users page.**
@@ -32,14 +38,17 @@ npm run dev
 ## Production Deployment
 
 ### Build frontend
+
 ```bash
 npm run build
 ```
 
 ### Start production server (serves React build + API)
+
 ```bash
 NODE_ENV=production npm start
 ```
+
 The app will be available on port 5000 (configurable via `PORT` env var).
 
 ---
@@ -57,11 +66,13 @@ The app will be available on port 5000 (configurable via `PORT` env var).
 - **Role-based auth** — Workers and Admins with JWT + refresh tokens
 
 ## Email Setup (Gmail)
+
 1. Enable 2FA on Gmail
 2. Create an App Password: Google Account → Security → App Passwords
 3. Set `SMTP_USER`, `SMTP_PASS`, and `EMAIL_FROM` in `server/.env`
 
 ## Google Calendar Setup
+
 1. Create a project at console.cloud.google.com
 2. Enable the Google Calendar API
 3. Create OAuth 2.0 credentials
