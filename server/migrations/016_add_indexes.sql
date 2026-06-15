@@ -5,7 +5,7 @@ CREATE INDEX IF NOT EXISTS idx_professional_ids_expiration ON professional_ids(e
 CREATE INDEX IF NOT EXISTS idx_liability_insurance_doctor_id ON liability_insurance(doctor_id);
 CREATE INDEX IF NOT EXISTS idx_liability_insurance_is_current ON liability_insurance(is_current);
 CREATE INDEX IF NOT EXISTS idx_workflow_instances_doctor_id ON workflow_instances(doctor_id);
-CREATE INDEX IF NOT EXISTS idx_workflow_step_instances_instance_id ON workflow_step_instances(workflow_instance_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_step_instances_workflow_id ON workflow_step_instances(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_alert_log_doctor_id ON alert_log(doctor_id);
 CREATE INDEX IF NOT EXISTS idx_alert_log_sent_at ON alert_log(sent_at);
 CREATE INDEX IF NOT EXISTS idx_disclosures_doctor_id ON disclosures(doctor_id);
