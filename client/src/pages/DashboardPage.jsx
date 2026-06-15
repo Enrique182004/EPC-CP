@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { dashboard } from "../api/index.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
   formatDate,
   urgencyLabel,
@@ -25,6 +26,7 @@ const colorText = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: dashboard.get,
@@ -274,9 +276,11 @@ export default function DashboardPage() {
         {doctorGrid.length === 0 ? (
           <p className="text-sm text-gray-400">
             No doctors in the system yet.{" "}
-            <Link to="/doctors/new" className="text-blue-600 hover:underline">
-              Add the first doctor →
-            </Link>
+            {user?.role === "admin" && (
+              <Link to="/doctors/new" className="text-blue-600 hover:underline">
+                Add the first doctor →
+              </Link>
+            )}
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">

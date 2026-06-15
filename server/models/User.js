@@ -20,7 +20,11 @@ const findByIdWithToken = (id) =>
     )
     .get(id);
 const findByEmail = (email) =>
-  db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  db
+    .prepare(
+      "SELECT id, email, role, name, phone, password_hash FROM users WHERE email = ?",
+    )
+    .get(email);
 
 const create = ({ email, password_hash, role, name, phone }) =>
   db

@@ -236,7 +236,9 @@ disclosures.get("/", authenticate, requireDoctorAccess, (req, res, next) => {
 disclosures.put("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
-    const disclosureData = req.body; // array of { question_key, answer, explanation }
+    const disclosureData = req.body;
+    if (!Array.isArray(disclosureData))
+      return res.status(400).json({ error: "Body must be an array" });
     const validKeys = new Set(DISCLOSURE_QUESTIONS);
     const upsert = db.prepare(`
       INSERT INTO disclosures (doctor_id, question_key, answer, explanation) VALUES (?, ?, ?, ?)

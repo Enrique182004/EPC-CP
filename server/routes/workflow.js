@@ -12,6 +12,10 @@ const router = express.Router({ mergeParams: true });
 router.get("/", authenticate, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
+    const doctor = Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id)
+      return res.status(403).json({ error: "Forbidden" });
     let instance = Workflow.getInstance(doctorId);
     if (!instance) instance = Workflow.createInstance(doctorId);
     const steps = Workflow.getStepInstances(instance.id);
@@ -140,6 +144,8 @@ router.post("/send-reminder", authenticate, async (req, res, next) => {
     const doctorId = parseInt(req.params.id);
     const doctor = Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id)
+      return res.status(403).json({ error: "Forbidden" });
 
     const docs = Document.findByDoctor(doctorId);
     const missing = docs
