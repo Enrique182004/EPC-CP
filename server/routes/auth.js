@@ -63,10 +63,10 @@ router.post(
         return res
           .status(400)
           .json({ error: "Email, password, and name required" });
-      if (password.length < 8)
+      if (password.length < 8 || password.length > 128)
         return res
           .status(400)
-          .json({ error: "Password must be at least 8 characters" });
+          .json({ error: "Password must be 8–128 characters" });
 
       const exists = User.findByEmail(email);
       if (exists)

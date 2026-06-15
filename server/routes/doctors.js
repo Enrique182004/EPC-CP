@@ -11,10 +11,17 @@ const router = express.Router();
 router.get("/", authenticate, (req, res, next) => {
   try {
     const { search, status, workerId } = req.query;
+    // Workers can only see their own assigned doctors; ignore client-supplied workerId
+    const effectiveWorkerId =
+      req.user.role === "admin"
+        ? workerId
+          ? parseInt(workerId)
+          : undefined
+        : req.user.id;
     const doctors = Doctor.findAll({
       search,
       status,
-      workerId: workerId ? parseInt(workerId) : undefined,
+      workerId: effectiveWorkerId,
     });
     res.json(doctors);
   } catch (err) {
@@ -48,6 +55,8 @@ router.get("/:id", authenticate, (req, res, next) => {
   try {
     const doctor = Doctor.findById(parseInt(req.params.id));
     if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id)
+      return res.status(403).json({ error: "Forbidden" });
     res.json(doctor);
   } catch (err) {
     next(err);
@@ -60,10 +69,15 @@ router.patch("/:id", authenticate, (req, res, next) => {
     const id = parseInt(req.params.id);
     const doctor = Doctor.findById(id);
     if (!doctor) return res.status(404).json({ error: "Doctor not found" });
-    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id) {
+    if (
+      req.user.role !== "admin" &&
+      doctor.assigned_worker_id !== req.user.id
+    ) {
       return res.status(403).json({ error: "Forbidden" });
     }
-    Doctor.update(id, req.body);
+    const update = { ...req.body };
+    if (req.user.role !== "admin") delete update.credentialing_status;
+    Doctor.update(id, update);
     res.json(Doctor.findById(id));
   } catch (err) {
     next(err);

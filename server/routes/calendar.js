@@ -1,7 +1,11 @@
 const express = require("express");
 const CalendarEvent = require("../models/CalendarEvent");
 const User = require("../models/User");
-const { getAuthUrl, exchangeCode, verifyState } = require("../config/googleCalendar");
+const {
+  getAuthUrl,
+  exchangeCode,
+  verifyState,
+} = require("../config/googleCalendar");
 const { createEvent, deleteEvent } = require("../services/calendarService");
 const { authenticate } = require("../middleware/auth");
 
@@ -72,7 +76,7 @@ router.post("/events", authenticate, async (req, res, next) => {
 // DELETE /api/calendar/events/:id
 router.delete("/events/:id", authenticate, async (req, res, next) => {
   try {
-    await deleteEvent(parseInt(req.params.id), req.user.id);
+    await deleteEvent(parseInt(req.params.id), req.user.id, req.user.role);
     res.json({ message: "Event deleted" });
   } catch (err) {
     next(err);

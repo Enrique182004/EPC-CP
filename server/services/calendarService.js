@@ -9,7 +9,13 @@ async function createEvent({
   title,
   description,
   event_date,
+  userRole,
 }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(event_date)) {
+    const err = new Error("event_date must be YYYY-MM-DD");
+    err.status = 400;
+    throw err;
+  }
   const user = findByIdWithToken(userId);
   let googleEventId = null;
 
@@ -54,14 +60,14 @@ async function createEvent({
   return { id: result.lastInsertRowid, googleEventId };
 }
 
-async function deleteEvent(eventId, userId) {
+async function deleteEvent(eventId, userId, userRole) {
   const db = require("../config/database");
   const ce = db
     .prepare("SELECT * FROM calendar_events WHERE id = ?")
     .get(eventId);
   if (!ce) return;
 
-  if (String(ce.calendar_owner) !== String(userId)) {
+  if (userRole !== "admin" && String(ce.calendar_owner) !== String(userId)) {
     const err = new Error("Forbidden");
     err.status = 403;
     throw err;

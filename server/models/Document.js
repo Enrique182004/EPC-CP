@@ -100,11 +100,15 @@ const addVersion = (
       )
       .all(documentId);
     if (old.length > 3) {
+      const uploadsDir = path.resolve(__dirname, "../uploads");
       const toDelete = old.slice(0, old.length - 3);
       for (const v of toDelete) {
         db.prepare(`DELETE FROM document_versions WHERE id = ?`).run(v.id);
         try {
-          fs.unlinkSync(path.join(__dirname, "..", v.file_path));
+          const resolved = path.resolve(__dirname, "..", v.file_path);
+          if (resolved.startsWith(uploadsDir + path.sep)) {
+            fs.unlinkSync(resolved);
+          }
         } catch (_) {}
       }
     }

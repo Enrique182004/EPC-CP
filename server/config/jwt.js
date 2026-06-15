@@ -13,9 +13,10 @@ if (
     JWT_REFRESH_SECRET === "dev_refresh_secret_change_me")
 ) {
   console.error(
-    "[SECURITY] JWT secrets are using default development values in production! " +
+    "[SECURITY] Refusing to start: JWT secrets are using default development values in production. " +
       "Set JWT_SECRET and JWT_REFRESH_SECRET environment variables.",
   );
+  process.exit(1);
 }
 
 function signAccessToken(payload) {
