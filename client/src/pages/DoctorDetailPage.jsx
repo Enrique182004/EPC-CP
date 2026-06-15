@@ -196,22 +196,27 @@ export default function DoctorDetailPage() {
               }
             />
           </div>
-          <div>
-            <label className="label">Credentialing Status</label>
-            <select
-              className="input"
-              value={form.credentialing_status || "pending"}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, credentialing_status: e.target.value }))
-              }
-            >
-              {CREDENTIALING_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_LABELS[s]}
-                </option>
-              ))}
-            </select>
-          </div>
+          {user?.role === "admin" && (
+            <div>
+              <label className="label">Credentialing Status</label>
+              <select
+                className="input"
+                value={form.credentialing_status || "pending"}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    credentialing_status: e.target.value,
+                  }))
+                }
+              >
+                {CREDENTIALING_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {user?.role === "admin" && (
             <div>
               <label className="label">Assigned Worker</label>
