@@ -1,7 +1,7 @@
 const express = require("express");
 const CalendarEvent = require("../models/CalendarEvent");
 const User = require("../models/User");
-const { getAuthUrl, exchangeCode } = require("../config/googleCalendar");
+const { getAuthUrl, exchangeCode, verifyState } = require("../config/googleCalendar");
 const { createEvent, deleteEvent } = require("../services/calendarService");
 const { authenticate } = require("../middleware/auth");
 
@@ -19,9 +19,13 @@ router.get("/oauth/url", authenticate, (req, res) => {
 router.get("/oauth/callback", async (req, res, next) => {
   try {
     const { code, state } = req.query;
-    if (!code) return res.status(400).send("Missing code");
+    if (!code || !state) return res.status(400).send("Missing code or state");
+    const userId = verifyState(state);
+    if (!userId) return res.status(400).send("Invalid state parameter");
     const tokens = await exchangeCode(code);
-    User.updateGoogleToken(parseInt(state), tokens.refresh_token);
+    if (tokens.refresh_token) {
+      User.updateGoogleToken(userId, tokens.refresh_token);
+    }
     res.redirect(
       `${process.env.CLIENT_URL || "http://localhost:5173"}?calendarConnected=1`,
     );
@@ -33,7 +37,10 @@ router.get("/oauth/callback", async (req, res, next) => {
 // GET /api/calendar/events
 router.get("/events", authenticate, (req, res, next) => {
   try {
-    const events = CalendarEvent.findAll();
+    const events =
+      req.user.role === "admin"
+        ? CalendarEvent.findAll()
+        : CalendarEvent.findByOwner(req.user.id);
     res.json(events);
   } catch (err) {
     next(err);

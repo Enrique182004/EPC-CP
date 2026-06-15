@@ -4,6 +4,17 @@ const { authenticate } = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
 
+function requireDoctorAccess(req, res, next) {
+  if (req.user.role === "admin") return next();
+  const doc = db
+    .prepare("SELECT assigned_worker_id FROM doctors WHERE id = ?")
+    .get(parseInt(req.params.id));
+  if (!doc) return res.status(404).json({ error: "Doctor not found" });
+  if (doc.assigned_worker_id !== req.user.id)
+    return res.status(403).json({ error: "Forbidden" });
+  next();
+}
+
 // Generic CRUD factory for sub-resources
 function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
   const r = express.Router({ mergeParams: true });
@@ -21,7 +32,7 @@ function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
     }
   });
 
-  r.post("/", authenticate, (req, res, next) => {
+  r.post("/", authenticate, requireDoctorAccess, (req, res, next) => {
     try {
       const doctorId = parseInt(req.params.id);
       const fields = { [doctorForeignKey]: doctorId };
@@ -44,7 +55,7 @@ function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
     }
   });
 
-  r.patch("/:subId", authenticate, (req, res, next) => {
+  r.patch("/:subId", authenticate, requireDoctorAccess, (req, res, next) => {
     try {
       const subId = parseInt(req.params.subId);
       const sets = [];
@@ -74,7 +85,7 @@ function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
     }
   });
 
-  r.delete("/:subId", authenticate, (req, res, next) => {
+  r.delete("/:subId", authenticate, requireDoctorAccess, (req, res, next) => {
     try {
       const info = db
         .prepare(
@@ -222,16 +233,18 @@ disclosures.get("/", authenticate, (req, res, next) => {
   }
 });
 
-disclosures.put("/", authenticate, (req, res, next) => {
+disclosures.put("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const disclosureData = req.body; // array of { question_key, answer, explanation }
+    const validKeys = new Set(DISCLOSURE_QUESTIONS);
     const upsert = db.prepare(`
       INSERT INTO disclosures (doctor_id, question_key, answer, explanation) VALUES (?, ?, ?, ?)
       ON CONFLICT(doctor_id, question_key) DO UPDATE SET answer = excluded.answer, explanation = excluded.explanation, updated_at = CURRENT_TIMESTAMP
     `);
     const tx = db.transaction(() => {
       for (const d of disclosureData) {
+        if (!validKeys.has(d.question_key)) continue;
         upsert.run(
           doctorId,
           d.question_key,

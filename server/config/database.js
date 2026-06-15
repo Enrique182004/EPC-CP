@@ -17,16 +17,34 @@ const db = new DatabaseSync(DB_PATH);
 db.exec("PRAGMA journal_mode = WAL");
 db.exec("PRAGMA foreign_keys = ON");
 
-// Transaction helper (node:sqlite has no built-in transaction() wrapper)
+// Transaction helper with savepoint support for nested calls
+db._txDepth = 0;
 db.transaction = function (fn) {
   return function (...args) {
-    db.exec("BEGIN");
+    const top = db._txDepth === 0;
+    const savepoint = `sp_${db._txDepth}`;
+    if (top) {
+      db.exec("BEGIN");
+    } else {
+      db.exec(`SAVEPOINT ${savepoint}`);
+    }
+    db._txDepth++;
     try {
       const result = fn(...args);
-      db.exec("COMMIT");
+      db._txDepth--;
+      if (top) {
+        db.exec("COMMIT");
+      } else {
+        db.exec(`RELEASE ${savepoint}`);
+      }
       return result;
     } catch (err) {
-      db.exec("ROLLBACK");
+      db._txDepth--;
+      if (top) {
+        db.exec("ROLLBACK");
+      } else {
+        db.exec(`ROLLBACK TO ${savepoint}`);
+      }
       throw err;
     }
   };

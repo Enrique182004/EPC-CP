@@ -28,9 +28,14 @@ const updateStatus = (doctorId, { status, notes }) => {
     vals.push(now);
   }
 
-  db.prepare(
+  const info = db.prepare(
     `UPDATE tdi_applications SET ${sets.join(", ")} WHERE doctor_id = ?`,
   ).run(...vals, doctorId);
+  if (info.changes === 0) {
+    const err = new Error("TDI record not found");
+    err.status = 404;
+    throw err;
+  }
 };
 
 module.exports = { findByDoctor, upsert, updateStatus };

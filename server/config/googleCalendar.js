@@ -1,4 +1,5 @@
 const { google } = require("googleapis");
+const crypto = require("crypto");
 require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -15,12 +16,36 @@ function createOAuth2Client(refreshToken = null) {
   return client;
 }
 
+function signState(userId) {
+  const sig = crypto
+    .createHmac("sha256", process.env.JWT_SECRET || "dev_secret_change_me")
+    .update(String(userId))
+    .digest("hex");
+  return `${userId}.${sig}`;
+}
+
+function verifyState(state) {
+  const dot = state.lastIndexOf(".");
+  if (dot === -1) return null;
+  const id = state.slice(0, dot);
+  const sig = state.slice(dot + 1);
+  const expected = crypto
+    .createHmac("sha256", process.env.JWT_SECRET || "dev_secret_change_me")
+    .update(id)
+    .digest("hex");
+  const valid = crypto.timingSafeEqual(
+    Buffer.from(sig, "hex"),
+    Buffer.from(expected, "hex"),
+  );
+  return valid ? parseInt(id) : null;
+}
+
 function getAuthUrl(userId) {
   const client = createOAuth2Client();
   return client.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar.events"],
-    state: String(userId),
+    state: signState(userId),
     prompt: "consent",
   });
 }
@@ -36,4 +61,4 @@ function getCalendar(refreshToken) {
   return google.calendar({ version: "v3", auth });
 }
 
-module.exports = { getAuthUrl, exchangeCode, getCalendar, createOAuth2Client };
+module.exports = { getAuthUrl, exchangeCode, getCalendar, createOAuth2Client, verifyState };

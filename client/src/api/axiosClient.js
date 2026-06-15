@@ -25,6 +25,8 @@ api.interceptors.response.use(
       !original._retry &&
       !original.url?.includes("/auth/")
     ) {
+      original._retry = true;
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           queue.push({ resolve, reject });
@@ -33,8 +35,6 @@ api.interceptors.response.use(
           return api(original);
         });
       }
-
-      original._retry = true;
       isRefreshing = true;
 
       try {

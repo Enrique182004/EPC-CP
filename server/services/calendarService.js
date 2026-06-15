@@ -61,6 +61,12 @@ async function deleteEvent(eventId, userId) {
     .get(eventId);
   if (!ce) return;
 
+  if (String(ce.calendar_owner) !== String(userId)) {
+    const err = new Error("Forbidden");
+    err.status = 403;
+    throw err;
+  }
+
   if (ce.google_event_id && userId) {
     const user = User.findById(userId);
     if (user && user.google_refresh_token) {

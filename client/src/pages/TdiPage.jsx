@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tdi, doctors } from "../api/index.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDate } from "../utils/dateHelpers.js";
 
 const STATUSES = [
@@ -17,6 +17,8 @@ export default function TdiPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+
+  useEffect(() => { setNotes(""); }, [id]);
 
   const { data: doctor } = useQuery({
     queryKey: ["doctor", id],
@@ -35,8 +37,8 @@ export default function TdiPage() {
       qc.invalidateQueries(["doctor", id]);
       setMsg("TDI status updated.");
       setTimeout(() => setMsg(""), 3000);
-    } catch {
-      setMsg("Update failed.");
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Update failed.");
     }
     setSaving(false);
   };

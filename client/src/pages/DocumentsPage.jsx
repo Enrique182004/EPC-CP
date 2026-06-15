@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { documents, doctors, workflow as workflowApi } from "../api/index.js";
 import { DOC_TYPE_LABELS } from "../utils/constants.js";
 import clsx from "clsx";
@@ -12,6 +12,51 @@ const statusBadge = {
   expired: "badge-red",
 };
 const statusIcon = { missing: "✗", uploaded: "↑", approved: "✓", expired: "!" };
+
+function VersionHistory({ doctorId, docType, expandedType }) {
+  const { data: versions = [] } = useQuery({
+    queryKey: ["docVersions", doctorId, docType],
+    queryFn: () => documents.versions(doctorId, docType),
+    enabled: expandedType === docType,
+  });
+  return (
+    <div className="mt-3 border-t pt-3">
+      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
+        Version History
+      </h4>
+      {versions.length === 0 ? (
+        <p className="text-xs text-gray-400">No versions uploaded yet.</p>
+      ) : (
+        <div className="space-y-1">
+          {versions.map((v) => (
+            <div
+              key={v.id}
+              className="flex items-center justify-between text-xs text-gray-600"
+            >
+              <span>{v.file_name}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400">
+                  {new Date(v.uploaded_at).toLocaleDateString()}
+                </span>
+                {v.is_current ? (
+                  <span className="badge-green">Current</span>
+                ) : null}
+                <a
+                  href={documents.downloadUrl(doctorId, docType, v.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DocumentsPage() {
   const { id } = useParams();
@@ -66,51 +111,6 @@ export default function DocumentsPage() {
     }
     setSendingReminder(false);
     setTimeout(() => setMsg(""), 5000);
-  };
-
-  const VersionHistory = ({ docType }) => {
-    const { data: versions = [] } = useQuery({
-      queryKey: ["docVersions", id, docType],
-      queryFn: () => documents.versions(id, docType),
-      enabled: expandedType === docType,
-    });
-    return (
-      <div className="mt-3 border-t pt-3">
-        <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-          Version History
-        </h4>
-        {versions.length === 0 ? (
-          <p className="text-xs text-gray-400">No versions uploaded yet.</p>
-        ) : (
-          <div className="space-y-1">
-            {versions.map((v) => (
-              <div
-                key={v.id}
-                className="flex items-center justify-between text-xs text-gray-600"
-              >
-                <span>{v.file_name}</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400">
-                    {new Date(v.uploaded_at).toLocaleDateString()}
-                  </span>
-                  {v.is_current ? (
-                    <span className="badge-green">Current</span>
-                  ) : null}
-                  <a
-                    href={documents.downloadUrl(id, docType, v.id)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Download
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
   };
 
   if (isLoading)
@@ -224,7 +224,11 @@ export default function DocumentsPage() {
               </div>
             </div>
             {expandedType === doc.doc_type && (
-              <VersionHistory docType={doc.doc_type} />
+              <VersionHistory
+                doctorId={id}
+                docType={doc.doc_type}
+                expandedType={expandedType}
+              />
             )}
           </div>
         ))}

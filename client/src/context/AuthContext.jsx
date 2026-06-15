@@ -9,18 +9,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      auth
-        .me()
-        .then(setUser)
-        .catch(() => {
-          localStorage.removeItem("token");
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    if (!token) { setLoading(false); return; }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    auth
+      .me({ signal: controller.signal })
+      .then(setUser)
+      .catch(() => {
+        localStorage.removeItem("token");
+        setUser(null);
+      })
+      .finally(() => { clearTimeout(timeout); setLoading(false); });
   }, []);
 
   const login = async (email, password) => {

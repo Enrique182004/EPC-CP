@@ -1,18 +1,18 @@
 const db = require("../config/database");
 
 const wasAlertSent = (doctorId, alertType, subjectId) => {
-  // Check if this specific alert was already sent in the last 25 days
-  const row = db
+  if (subjectId == null) {
+    return !!db
+      .prepare(
+        `SELECT id FROM alert_log WHERE doctor_id = ? AND alert_type = ? AND subject_id IS NULL AND sent_at >= datetime('now', '-25 days') LIMIT 1`,
+      )
+      .get(doctorId, alertType);
+  }
+  return !!db
     .prepare(
-      `
-    SELECT id FROM alert_log
-    WHERE doctor_id = ? AND alert_type = ? AND (? IS NULL OR subject_id = ?)
-      AND sent_at >= datetime('now', '-25 days')
-    LIMIT 1
-  `,
+      `SELECT id FROM alert_log WHERE doctor_id = ? AND alert_type = ? AND subject_id = ? AND sent_at >= datetime('now', '-25 days') LIMIT 1`,
     )
-    .get(doctorId, alertType, subjectId, subjectId);
-  return !!row;
+    .get(doctorId, alertType, subjectId);
 };
 
 const log = ({
