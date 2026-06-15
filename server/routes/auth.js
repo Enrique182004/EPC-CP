@@ -63,6 +63,16 @@ router.post(
         return res
           .status(400)
           .json({ error: "Email, password, and name required" });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        return res.status(400).json({ error: "Invalid email format" });
+      if (typeof name === "string" && name.length > 100)
+        return res
+          .status(400)
+          .json({ error: "Name must be 100 characters or fewer" });
+      if (phone && typeof phone === "string" && phone.length > 30)
+        return res
+          .status(400)
+          .json({ error: "Phone must be 30 characters or fewer" });
       if (password.length < 8 || password.length > 128)
         return res
           .status(400)

@@ -1,6 +1,7 @@
 const express = require("express");
 const CalendarEvent = require("../models/CalendarEvent");
 const User = require("../models/User");
+const Doctor = require("../models/Doctor");
 const {
   getAuthUrl,
   exchangeCode,
@@ -59,6 +60,14 @@ router.post("/events", authenticate, async (req, res, next) => {
       return res
         .status(400)
         .json({ error: "doctorId, title, and event_date required" });
+    if (typeof title === "string" && title.length > 255)
+      return res
+        .status(400)
+        .json({ error: "title must be 255 characters or fewer" });
+    const doctor = Doctor.findById(parseInt(doctorId));
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id)
+      return res.status(403).json({ error: "Forbidden" });
     const result = await createEvent({
       userId: req.user.id,
       doctorId,
