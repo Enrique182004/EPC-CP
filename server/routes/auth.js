@@ -22,8 +22,12 @@ router.post("/login", async (req, res, next) => {
       return res.status(400).json({ error: "Email and password required" });
 
     const user = User.findByEmail(email);
-    const valid = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
-    if (!user || !valid) return res.status(401).json({ error: "Invalid credentials" });
+    const valid = await bcrypt.compare(
+      password,
+      user ? user.password_hash : DUMMY_HASH,
+    );
+    if (!user || !valid)
+      return res.status(401).json({ error: "Invalid credentials" });
 
     const payload = {
       id: user.id,
@@ -68,25 +72,25 @@ router.post(
       if (exists)
         return res.status(409).json({ error: "Email already registered" });
 
+      const VALID_ROLES = ["admin", "worker"];
+      const assignedRole = VALID_ROLES.includes(role) ? role : "worker";
       const password_hash = await bcrypt.hash(password, 12);
       const result = User.create({
         email,
         password_hash,
-        role: role || "worker",
+        role: assignedRole,
         name,
         phone,
       });
       const newUser = User.findById(result.lastInsertRowid);
-      res
-        .status(201)
-        .json({
-          user: {
-            id: newUser.id,
-            email: newUser.email,
-            role: newUser.role,
-            name: newUser.name,
-          },
-        });
+      res.status(201).json({
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          role: newUser.role,
+          name: newUser.name,
+        },
+      });
     } catch (err) {
       next(err);
     }

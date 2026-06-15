@@ -9,6 +9,13 @@ const findAll = () =>
 const findById = (id) =>
   db
     .prepare(
+      "SELECT id, email, role, name, phone, created_at FROM users WHERE id = ?",
+    )
+    .get(id);
+
+const findByIdWithToken = (id) =>
+  db
+    .prepare(
       "SELECT id, email, role, name, phone, google_refresh_token, created_at FROM users WHERE id = ?",
     )
     .get(id);
@@ -48,6 +55,7 @@ const updateGoogleToken = (id, token) =>
 module.exports = {
   findAll,
   findById,
+  findByIdWithToken,
   findByEmail,
   create,
   update,

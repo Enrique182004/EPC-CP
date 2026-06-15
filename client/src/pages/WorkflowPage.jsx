@@ -50,7 +50,7 @@ export default function WorkflowPage() {
         delete copy[step.step_id];
         return copy;
       });
-      qc.invalidateQueries(["workflow", id]);
+      qc.invalidateQueries({ queryKey: ["workflow", id] });
     } catch (err) {
       setMsg(err.response?.data?.error || "Failed to update step");
       setTimeout(() => setMsg(""), 4000);
@@ -64,8 +64,8 @@ export default function WorkflowPage() {
     try {
       const result = await workflow.advance(id);
       setMsg(result.message);
-      qc.invalidateQueries(["workflow", id]);
-      qc.invalidateQueries(["doctor", id]);
+      qc.invalidateQueries({ queryKey: ["workflow", id] });
+      qc.invalidateQueries({ queryKey: ["doctor", id] });
     } catch (err) {
       setMsg(err.response?.data?.error || "Failed");
     } finally {

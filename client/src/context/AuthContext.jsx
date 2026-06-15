@@ -9,7 +9,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     auth
@@ -19,7 +22,10 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("token");
         setUser(null);
       })
-      .finally(() => { clearTimeout(timeout); setLoading(false); });
+      .finally(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
   }, []);
 
   const login = async (email, password) => {

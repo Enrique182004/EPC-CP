@@ -19,7 +19,7 @@ function requireDoctorAccess(req, res, next) {
 function makeSubResource(table, allowedFields, doctorForeignKey = "doctor_id") {
   const r = express.Router({ mergeParams: true });
 
-  r.get("/", authenticate, (req, res, next) => {
+  r.get("/", authenticate, requireDoctorAccess, (req, res, next) => {
     try {
       const rows = db
         .prepare(
@@ -216,7 +216,7 @@ const DISCLOSURE_QUESTIONS = [
 ];
 
 const disclosures = express.Router({ mergeParams: true });
-disclosures.get("/", authenticate, (req, res, next) => {
+disclosures.get("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const rows = db
       .prepare("SELECT * FROM disclosures WHERE doctor_id = ?")

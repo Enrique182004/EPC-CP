@@ -4,7 +4,8 @@ import api from "./axiosClient";
 export const auth = {
   login: (data) => api.post("/auth/login", data).then((r) => r.data),
   logout: () => api.post("/auth/logout"),
-  me: (opts) => api.get("/auth/me", { signal: opts?.signal }).then((r) => r.data),
+  me: (opts) =>
+    api.get("/auth/me", { signal: opts?.signal }).then((r) => r.data),
   register: (data) => api.post("/auth/register", data).then((r) => r.data),
   users: () => api.get("/auth/users").then((r) => r.data),
 };

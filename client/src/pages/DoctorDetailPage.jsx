@@ -66,8 +66,8 @@ export default function DoctorDetailPage() {
         navigate(`/doctors/${newDoc.id}`);
       } else {
         await doctors.update(id, form);
-        qc.invalidateQueries(["doctor", id]);
-        qc.invalidateQueries(["doctors"]);
+        qc.invalidateQueries({ queryKey: ["doctor", id] });
+        qc.invalidateQueries({ queryKey: ["doctors"] });
         setMsg("Saved successfully.");
         setTimeout(() => setMsg(""), 3000);
       }
@@ -295,7 +295,9 @@ export default function DoctorDetailPage() {
                   setForm((p) => ({ ...p, ...f }));
                   doctors
                     .update(id, f)
-                    .then(() => qc.invalidateQueries(["doctor", id]))
+                    .then(() =>
+                      qc.invalidateQueries({ queryKey: ["doctor", id] }),
+                    )
                     .catch((err) =>
                       setMsg(err.response?.data?.error || "Save failed"),
                     );

@@ -60,6 +60,13 @@ const updateStep = (workflowId, stepId, { status, notes, completed_by }) => {
 };
 
 const advance = (workflowId, nextStep) => {
+  const valid = db
+    .prepare("SELECT id FROM workflow_steps WHERE step_number = ?")
+    .get(nextStep);
+  if (!valid)
+    throw Object.assign(new Error(`Invalid step number: ${nextStep}`), {
+      status: 400,
+    });
   db.prepare(
     `UPDATE workflow_instances SET current_step = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
   ).run(nextStep, workflowId);

@@ -83,8 +83,8 @@ export default function DocumentsPage() {
     setUploading((u) => ({ ...u, [docType]: true }));
     try {
       await documents.upload(id, docType, file);
-      qc.invalidateQueries(["documents", id]);
-      qc.invalidateQueries(["missingForms", id]);
+      qc.invalidateQueries({ queryKey: ["documents", id] });
+      qc.invalidateQueries({ queryKey: ["missingForms", id] });
     } catch (err) {
       alert(err.response?.data?.error || "Upload failed");
     } finally {
@@ -94,7 +94,7 @@ export default function DocumentsPage() {
 
   const handleStatusChange = async (docType, status) => {
     await documents.updateStatus(id, docType, { status });
-    qc.invalidateQueries(["documents", id]);
+    qc.invalidateQueries({ queryKey: ["documents", id] });
   };
 
   const handleReminder = async () => {

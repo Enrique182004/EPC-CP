@@ -1,6 +1,6 @@
 const { getCalendar } = require("../config/googleCalendar");
 const CalendarEvent = require("../models/CalendarEvent");
-const User = require("../models/User");
+const { findByIdWithToken } = require("../models/User");
 
 async function createEvent({
   userId,
@@ -10,7 +10,7 @@ async function createEvent({
   description,
   event_date,
 }) {
-  const user = User.findById(userId);
+  const user = findByIdWithToken(userId);
   let googleEventId = null;
 
   if (user && user.google_refresh_token && process.env.GOOGLE_CLIENT_ID) {
@@ -68,7 +68,7 @@ async function deleteEvent(eventId, userId) {
   }
 
   if (ce.google_event_id && userId) {
-    const user = User.findById(userId);
+    const user = findByIdWithToken(userId);
     if (user && user.google_refresh_token) {
       try {
         const calendar = getCalendar(user.google_refresh_token);

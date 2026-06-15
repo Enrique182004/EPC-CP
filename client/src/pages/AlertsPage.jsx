@@ -19,7 +19,7 @@ export default function AlertsPage() {
     setTriggering(true);
     try {
       await alerts.trigger();
-      qc.invalidateQueries(["alerts"]);
+      qc.invalidateQueries({ queryKey: ["alerts"] });
       setMsg("Alert check complete. Check logs for details.");
     } catch (err) {
       setMsg(err.response?.data?.error || "Alert check failed.");

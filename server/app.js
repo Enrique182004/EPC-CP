@@ -20,7 +20,22 @@ const dashboardRoutes = require("./routes/dashboard");
 const app = express();
 
 // Security
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  }),
+);
 
 // CORS
 app.use(
@@ -68,7 +83,7 @@ app.use("/api/calendar", calendarRoutes);
 if (process.env.NODE_ENV === "production") {
   const clientBuild = path.join(__dirname, "../client/dist");
   app.use(express.static(clientBuild));
-  app.get("*", (req, res) => {
+  app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(clientBuild, "index.html"));
   });
 }

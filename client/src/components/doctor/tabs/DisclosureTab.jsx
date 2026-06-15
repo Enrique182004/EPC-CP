@@ -34,7 +34,7 @@ export default function DisclosureTab({ doctorId }) {
     }));
     try {
       await disclosures.save(doctorId, payload);
-      qc.invalidateQueries(["disclosures", doctorId]);
+      qc.invalidateQueries({ queryKey: ["disclosures", doctorId] });
       setMsg("Disclosures saved.");
       setTimeout(() => setMsg(""), 3000);
     } catch {

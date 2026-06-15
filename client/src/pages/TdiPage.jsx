@@ -18,7 +18,9 @@ export default function TdiPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
-  useEffect(() => { setNotes(""); }, [id]);
+  useEffect(() => {
+    setNotes("");
+  }, [id]);
 
   const { data: doctor } = useQuery({
     queryKey: ["doctor", id],
@@ -33,8 +35,8 @@ export default function TdiPage() {
     setSaving(true);
     try {
       await tdi.update(id, { status, notes: notes || tdiData?.notes });
-      qc.invalidateQueries(["tdi", id]);
-      qc.invalidateQueries(["doctor", id]);
+      qc.invalidateQueries({ queryKey: ["tdi", id] });
+      qc.invalidateQueries({ queryKey: ["doctor", id] });
       setMsg("TDI status updated.");
       setTimeout(() => setMsg(""), 3000);
     } catch (err) {

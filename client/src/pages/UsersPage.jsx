@@ -6,14 +6,6 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function UsersPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-
-  if (user?.role !== "admin") {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        Access denied. Admins only.
-      </div>
-    );
-  }
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -27,7 +19,16 @@ export default function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: authApi.users,
+    enabled: user?.role === "admin",
   });
+
+  if (user?.role !== "admin") {
+    return (
+      <div className="text-center py-20 text-gray-500">
+        Access denied. Admins only.
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +36,7 @@ export default function UsersPage() {
     setMsg("");
     try {
       await authApi.register(form);
-      qc.invalidateQueries(["users"]);
+      qc.invalidateQueries({ queryKey: ["users"] });
       setForm({ email: "", password: "", name: "", role: "worker", phone: "" });
       setMsg("User created successfully.");
       setTimeout(() => setMsg(""), 4000);

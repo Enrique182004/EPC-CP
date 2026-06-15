@@ -10,7 +10,7 @@ export default function PersonalInfoTab({ doctorId, doctor }) {
   const save = async () => {
     try {
       await doctors.update(doctorId, form);
-      qc.invalidateQueries(["doctor", doctorId]);
+      qc.invalidateQueries({ queryKey: ["doctor", doctorId] });
       setMsg("Saved.");
       setTimeout(() => setMsg(""), 3000);
     } catch {

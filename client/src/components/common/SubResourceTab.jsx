@@ -37,7 +37,7 @@ export default function SubResourceTab({
       } else {
         await createFn(formData);
       }
-      qc.invalidateQueries(queryKey);
+      qc.invalidateQueries({ queryKey });
       resetForm();
     } catch (err) {
       setError(err.response?.data?.error || "Save failed");
