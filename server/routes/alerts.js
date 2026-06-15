@@ -13,6 +13,7 @@ router.get("/", authenticate, (req, res, next) => {
     // Admins can see all alerts or filter by doctorId.
     // Workers only see alerts for their assigned doctors.
     let effectiveDoctorId = doctorId ? parseInt(doctorId) : undefined;
+    const effectiveLimit = Math.max(1, Math.min(parseInt(limit) || 100, 500));
     if (req.user.role !== "admin") {
       const workerAlerts = db
         .prepare(
@@ -24,12 +25,12 @@ router.get("/", authenticate, (req, res, next) => {
           ORDER BY al.sent_at DESC LIMIT ?
         `,
         )
-        .all(req.user.id, Math.min(parseInt(limit) || 100, 500));
+        .all(req.user.id, effectiveLimit);
       return res.json(workerAlerts);
     }
     const alerts = AlertLog.findAll({
       doctorId: effectiveDoctorId,
-      limit: Math.min(parseInt(limit) || 100, 500),
+      limit: effectiveLimit,
     });
     res.json(alerts);
   } catch (err) {
