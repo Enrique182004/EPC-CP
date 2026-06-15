@@ -23,13 +23,6 @@ const create = ({
       event_date,
     );
 
-const findByDoctor = (doctorId) =>
-  db
-    .prepare(
-      "SELECT * FROM calendar_events WHERE doctor_id = ? ORDER BY event_date",
-    )
-    .all(doctorId);
-
 const findAll = () =>
   db
     .prepare(
@@ -44,14 +37,7 @@ const findByOwner = (userId) =>
     )
     .all(String(userId));
 
-const update = (id, { google_event_id, title, description, event_date }) =>
-  db
-    .prepare(
-      "UPDATE calendar_events SET google_event_id = ?, title = ?, description = ?, event_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-    )
-    .run(google_event_id || null, title, description || null, event_date, id);
-
 const remove = (id) =>
   db.prepare("DELETE FROM calendar_events WHERE id = ?").run(id);
 
-module.exports = { create, findByDoctor, findAll, findByOwner, update, remove };
+module.exports = { create, findAll, findByOwner, remove };
