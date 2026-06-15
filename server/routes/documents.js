@@ -113,7 +113,7 @@ router.post(
       const doc = Document.findByType(doctorId, docType);
       const relativePath = path.join(
         "uploads",
-        req.params.id,
+        String(doctorId),
         docType,
         req.file.filename,
       );

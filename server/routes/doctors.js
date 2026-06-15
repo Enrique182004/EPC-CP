@@ -43,9 +43,7 @@ router.post("/", authenticate, requireRole("admin"), (req, res, next) => {
       rest.credentialing_status &&
       !Doctor.VALID_STATUSES.has(rest.credentialing_status)
     )
-      return res
-        .status(400)
-        .json({ error: "Invalid credentialing status" });
+      return res.status(400).json({ error: "Invalid credentialing status" });
     const fields = { first_name, last_name, ...rest };
     const result = Doctor.create(fields);
     const doctor = Doctor.findById(result.lastInsertRowid);

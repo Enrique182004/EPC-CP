@@ -168,7 +168,9 @@ async function checkExpirations() {
 
 async function sendMissingFormsReminder(doctor, missingForms, workerEmail) {
   const doctorEmail = doctor.personal_email || doctor.work_email;
-  const formList = missingForms.map((f) => `<li>${escapeHtml(f)}</li>`).join("");
+  const formList = missingForms
+    .map((f) => `<li>${escapeHtml(f)}</li>`)
+    .join("");
   const body = `<p>The following documents are still missing for Dr. <strong>${escapeHtml(doctor.first_name)} ${escapeHtml(doctor.last_name)}</strong>:</p><ul>${formList}</ul><p>Please provide these documents as soon as possible.</p>`;
   const html = emailHtml("Missing Credentialing Documents", body);
   const subject = `Action Required: Missing Documents - Dr. ${doctor.last_name}`;
