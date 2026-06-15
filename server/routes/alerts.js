@@ -7,11 +7,28 @@ const { checkExpirations } = require("../services/alertService");
 const router = express.Router();
 
 // GET /api/alerts
-router.get("/", authenticate, requireRole("admin"), (req, res, next) => {
+router.get("/", authenticate, (req, res, next) => {
   try {
     const { doctorId, limit } = req.query;
+    // Admins can see all alerts or filter by doctorId.
+    // Workers only see alerts for their assigned doctors.
+    let effectiveDoctorId = doctorId ? parseInt(doctorId) : undefined;
+    if (req.user.role !== "admin") {
+      const workerAlerts = db
+        .prepare(
+          `
+          SELECT al.*, d.first_name, d.last_name
+          FROM alert_log al
+          JOIN doctors d ON al.doctor_id = d.id
+          WHERE d.assigned_worker_id = ?
+          ORDER BY al.sent_at DESC LIMIT ?
+        `,
+        )
+        .all(req.user.id, Math.min(parseInt(limit) || 100, 500));
+      return res.json(workerAlerts);
+    }
     const alerts = AlertLog.findAll({
-      doctorId: doctorId ? parseInt(doctorId) : undefined,
+      doctorId: effectiveDoctorId,
       limit: Math.min(parseInt(limit) || 100, 500),
     });
     res.json(alerts);
