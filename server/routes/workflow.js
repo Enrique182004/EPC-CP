@@ -26,10 +26,11 @@ router.get(
   "/missing-forms",
   authenticate,
   (req, res, next) => {
+    const doctor = Doctor.findById(parseInt(req.params.id));
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
     if (
       req.user.role !== "admin" &&
-      req.user.id !==
-        Doctor.findById(parseInt(req.params.id))?.assigned_worker_id
+      req.user.id !== doctor.assigned_worker_id
     ) {
       return res.status(403).json({ error: "Forbidden" });
     }

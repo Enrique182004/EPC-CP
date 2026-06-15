@@ -8,6 +8,13 @@ const router = express.Router();
 // GET /api/dashboard
 router.get("/", authenticate, (req, res, next) => {
   try {
+    const isAdmin = req.user.role === "admin";
+    const wf = isAdmin ? "" : "AND d.assigned_worker_id = @wid";
+    const wfD = isAdmin ? "" : "AND assigned_worker_id = @wid";
+    const wfWhere = isAdmin ? "" : "WHERE d.assigned_worker_id = @wid";
+    const wfWhereD = isAdmin ? "" : "WHERE assigned_worker_id = @wid";
+    const wp = isAdmin ? {} : { wid: req.user.id };
+
     // Upcoming expirations (next 90 days)
     const expiringLicenses = db
       .prepare(
@@ -20,11 +27,12 @@ router.get("/", authenticate, (req, res, next) => {
         AND date(pi.expiration_date) >= date('now')
         AND date(pi.expiration_date) <= date('now', '+90 days')
         AND pi.id_type IN ('state_license','DEA')
+        ${wf}
       ORDER BY pi.expiration_date
       LIMIT 20
     `,
       )
-      .all();
+      .all(wp);
 
     const expiringInsurance = db
       .prepare(
@@ -36,11 +44,12 @@ router.get("/", authenticate, (req, res, next) => {
       WHERE li.is_current = 1 AND li.expiration_date IS NOT NULL
         AND date(li.expiration_date) >= date('now')
         AND date(li.expiration_date) <= date('now', '+90 days')
+        ${wf}
       ORDER BY li.expiration_date
       LIMIT 20
     `,
       )
-      .all();
+      .all(wp);
 
     const expiringRecredentialing = db
       .prepare(
@@ -51,20 +60,23 @@ router.get("/", authenticate, (req, res, next) => {
       WHERE recredentialing_due_date IS NOT NULL
         AND date(recredentialing_due_date) >= date('now')
         AND date(recredentialing_due_date) <= date('now', '+180 days')
+        ${wfD}
       ORDER BY recredentialing_due_date
       LIMIT 20
     `,
       )
-      .all();
+      .all(wp);
 
     // Doctor status summary
     const statusCounts = db
       .prepare(
         `
-      SELECT credentialing_status, COUNT(*) as count FROM doctors GROUP BY credentialing_status
+      SELECT credentialing_status, COUNT(*) as count FROM doctors
+      ${wfWhereD}
+      GROUP BY credentialing_status
     `,
       )
-      .all();
+      .all(wp);
 
     // All doctors with status info for grid
     const doctorGrid = db
@@ -78,10 +90,11 @@ router.get("/", authenticate, (req, res, next) => {
              (SELECT MIN(pi.expiration_date) FROM professional_ids pi WHERE pi.doctor_id = d.id AND pi.id_type = 'state_license') as license_expiry
       FROM doctors d
       LEFT JOIN users u ON d.assigned_worker_id = u.id
+      ${wfWhere}
       ORDER BY d.last_name, d.first_name
     `,
       )
-      .all();
+      .all(wp);
 
     // Missing forms summary (doctors with at least 1 missing required doc)
     const missingForms = db
@@ -92,11 +105,12 @@ router.get("/", authenticate, (req, res, next) => {
       FROM documents doc
       JOIN doctors d ON doc.doctor_id = d.id
       WHERE doc.status = 'missing' AND doc.required = 1
+        ${wf}
       GROUP BY d.id
       ORDER BY missing_count DESC
     `,
       )
-      .all();
+      .all(wp);
 
     // Pending TDI
     const pendingTdi = db
@@ -106,10 +120,11 @@ router.get("/", authenticate, (req, res, next) => {
       FROM tdi_applications t
       JOIN doctors d ON t.doctor_id = d.id
       WHERE t.status != 'signed' AND t.status != 'filed'
+        ${wf}
       ORDER BY d.last_name
     `,
       )
-      .all();
+      .all(wp);
 
     // Workflow issues
     const workflowIssues = db
@@ -119,10 +134,15 @@ router.get("/", authenticate, (req, res, next) => {
       FROM workflow_instances wi
       JOIN doctors d ON wi.doctor_id = d.id
       WHERE wi.status = 'on_hold'
+        ${wf}
       ORDER BY wi.updated_at
     `,
       )
-      .all();
+      .all(wp);
+
+    const totalDoctors = db
+      .prepare(`SELECT COUNT(*) as n FROM doctors ${wfWhereD}`)
+      .get(wp).n;
 
     res.json({
       expiringLicenses,
@@ -134,7 +154,7 @@ router.get("/", authenticate, (req, res, next) => {
       pendingTdi,
       workflowIssues,
       totals: {
-        doctors: db.prepare("SELECT COUNT(*) as n FROM doctors").get().n,
+        doctors: totalDoctors,
         pending:
           statusCounts.find((s) => s.credentialing_status === "pending")
             ?.count || 0,

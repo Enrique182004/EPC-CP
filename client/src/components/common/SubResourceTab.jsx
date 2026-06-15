@@ -56,7 +56,7 @@ export default function SubResourceTab({
     if (!window.confirm("Delete this record?")) return;
     try {
       await deleteFn(rowId);
-      qc.invalidateQueries(queryKey);
+      qc.invalidateQueries({ queryKey });
     } catch (err) {
       setError(err.response?.data?.error || "Delete failed");
     }

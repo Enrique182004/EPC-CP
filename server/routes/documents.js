@@ -2,11 +2,23 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const db = require("../config/database");
 const Document = require("../models/Document");
 const Doctor = require("../models/Doctor");
 const { authenticate } = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
+
+function requireDoctorAccess(req, res, next) {
+  if (req.user.role === "admin") return next();
+  const doc = db
+    .prepare("SELECT assigned_worker_id FROM doctors WHERE id = ?")
+    .get(parseInt(req.params.id));
+  if (!doc) return res.status(404).json({ error: "Doctor not found" });
+  if (doc.assigned_worker_id !== req.user.id)
+    return res.status(403).json({ error: "Forbidden" });
+  next();
+}
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
@@ -56,7 +68,7 @@ const upload = multer({
 });
 
 // GET /api/doctors/:id/documents
-router.get("/", authenticate, (req, res, next) => {
+router.get("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const docs = Document.findByDoctor(parseInt(req.params.id));
     res.json(docs);
@@ -69,6 +81,7 @@ router.get("/", authenticate, (req, res, next) => {
 router.post(
   "/:type/upload",
   authenticate,
+  requireDoctorAccess,
   upload.single("file"),
   (req, res, next) => {
     try {
@@ -107,7 +120,7 @@ router.post(
 );
 
 // GET /api/doctors/:id/documents/:type/versions
-router.get("/:type/versions", authenticate, (req, res, next) => {
+router.get("/:type/versions", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const doc = Document.findByType(doctorId, req.params.type);
@@ -119,7 +132,7 @@ router.get("/:type/versions", authenticate, (req, res, next) => {
 });
 
 // GET /api/doctors/:id/documents/:type/download/:versionId
-router.get("/:type/download/:versionId", authenticate, (req, res, next) => {
+router.get("/:type/download/:versionId", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const doc = Document.findByType(doctorId, req.params.type);
@@ -137,7 +150,7 @@ router.get("/:type/download/:versionId", authenticate, (req, res, next) => {
 });
 
 // PATCH /api/doctors/:id/documents/:type
-router.patch("/:type", authenticate, (req, res, next) => {
+router.patch("/:type", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const doc = Document.findByType(doctorId, req.params.type);

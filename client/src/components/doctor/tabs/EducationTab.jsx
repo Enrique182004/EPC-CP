@@ -31,7 +31,7 @@ export default function EducationTab({ doctorId }) {
       renderRow={(row) => (
         <div>
           <span className="font-medium capitalize">
-            {row.education_type.replace("_", " ")}
+            {row.education_type.replaceAll("_", " ")}
           </span>
           <span className="mx-1 text-gray-400">—</span>
           <span>{row.institution_name}</span>

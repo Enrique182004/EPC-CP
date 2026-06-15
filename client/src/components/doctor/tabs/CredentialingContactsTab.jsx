@@ -35,7 +35,7 @@ export default function CredentialingContactsTab({ doctorId }) {
           )}
           {row.contact_type && (
             <span className="ml-2 badge-gray capitalize">
-              {row.contact_type.replace("_", " ")}
+              {row.contact_type.replaceAll("_", " ")}
             </span>
           )}
           {row.email && (

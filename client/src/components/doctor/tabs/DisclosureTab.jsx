@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { disclosures } from "../../../api/index.js";
 import { DISCLOSURE_QUESTIONS } from "../../../utils/constants.js";
 
@@ -102,7 +102,13 @@ export default function DisclosureTab({ doctorId }) {
         <button className="btn-primary" onClick={handleSave}>
           Save Disclosures
         </button>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
+        {msg && (
+          <span
+            className={`text-sm ${msg.includes("failed") ? "text-red-600" : "text-green-600"}`}
+          >
+            {msg}
+          </span>
+        )}
       </div>
     </div>
   );

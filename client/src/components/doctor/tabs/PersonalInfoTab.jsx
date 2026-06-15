@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { doctors } from "../../../api/index.js";
 
 export default function PersonalInfoTab({ doctorId, doctor }) {
   const qc = useQueryClient();
   const [form, setForm] = useState(doctor || {});
   const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (doctor) setForm(doctor);
+  }, [doctor]);
 
   const save = async () => {
     try {
@@ -100,7 +104,13 @@ export default function PersonalInfoTab({ doctorId, doctor }) {
         <button className="btn-primary" onClick={save}>
           Save Personal Info
         </button>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
+        {msg && (
+          <span
+            className={`text-sm ${msg.includes("failed") ? "text-red-600" : "text-green-600"}`}
+          >
+            {msg}
+          </span>
+        )}
       </div>
     </div>
   );

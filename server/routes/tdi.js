@@ -1,12 +1,24 @@
 const express = require("express");
+const db = require("../config/database");
 const TdiApplication = require("../models/TdiApplication");
 const Doctor = require("../models/Doctor");
 const { authenticate } = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
 
+function requireDoctorAccess(req, res, next) {
+  if (req.user.role === "admin") return next();
+  const doc = db
+    .prepare("SELECT assigned_worker_id FROM doctors WHERE id = ?")
+    .get(parseInt(req.params.id));
+  if (!doc) return res.status(404).json({ error: "Doctor not found" });
+  if (doc.assigned_worker_id !== req.user.id)
+    return res.status(403).json({ error: "Forbidden" });
+  next();
+}
+
 // GET /api/doctors/:id/tdi
-router.get("/", authenticate, (req, res, next) => {
+router.get("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     TdiApplication.upsert(doctorId);
@@ -18,7 +30,7 @@ router.get("/", authenticate, (req, res, next) => {
 });
 
 // PATCH /api/doctors/:id/tdi
-router.patch("/", authenticate, (req, res, next) => {
+router.patch("/", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const { status, notes } = req.body;
