@@ -79,8 +79,12 @@ export const documents = {
     api
       .patch(`/doctors/${doctorId}/documents/${type}`, data)
       .then((r) => r.data),
-  downloadUrl: (doctorId, type, versionId) =>
-    `/api/doctors/${doctorId}/documents/${type}/download/${versionId}`,
+  download: (doctorId, type, versionId) =>
+    api
+      .get(`/doctors/${doctorId}/documents/${type}/download/${versionId}`, {
+        responseType: "blob",
+      })
+      .then((r) => r.data),
 };
 
 // Workflow

@@ -19,6 +19,21 @@ function VersionHistory({ doctorId, docType, expandedType }) {
     queryFn: () => documents.versions(doctorId, docType),
     enabled: expandedType === docType,
   });
+
+  const handleDownload = async (v) => {
+    try {
+      const blob = await documents.download(doctorId, docType, v.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = v.file_name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Download failed");
+    }
+  };
+
   return (
     <div className="mt-3 border-t pt-3">
       <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
@@ -41,14 +56,12 @@ function VersionHistory({ doctorId, docType, expandedType }) {
                 {v.is_current ? (
                   <span className="badge-green">Current</span>
                 ) : null}
-                <a
-                  href={documents.downloadUrl(doctorId, docType, v.id)}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
                   className="text-blue-600 hover:underline"
+                  onClick={() => handleDownload(v)}
                 >
                   Download
-                </a>
+                </button>
               </div>
             </div>
           ))}
