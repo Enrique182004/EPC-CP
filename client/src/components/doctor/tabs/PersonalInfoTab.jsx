@@ -17,8 +17,8 @@ export default function PersonalInfoTab({ doctorId, doctor }) {
       qc.invalidateQueries({ queryKey: ["doctor", doctorId] });
       setMsg("Saved.");
       setTimeout(() => setMsg(""), 3000);
-    } catch {
-      setMsg("Save failed.");
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Save failed.");
     }
   };
 

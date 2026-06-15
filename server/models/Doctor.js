@@ -1,12 +1,6 @@
 const db = require("../config/database");
 
-const VALID_STATUSES = new Set([
-  "pending",
-  "in_progress",
-  "complete",
-  "expired",
-  "on_hold",
-]);
+const VALID_STATUSES = new Set(["pending", "in_progress", "complete", "expired"]);
 
 const findAll = ({ search, status, workerId } = {}) => {
   let q = `SELECT d.*, u.name as worker_name FROM doctors d LEFT JOIN users u ON d.assigned_worker_id = u.id WHERE 1=1`;
@@ -168,6 +162,7 @@ const findExpiringRecredentialing = (days) =>
     .all(days);
 
 module.exports = {
+  VALID_STATUSES,
   findAll,
   findById,
   create,

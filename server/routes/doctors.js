@@ -39,6 +39,13 @@ router.post("/", authenticate, requireRole("admin"), (req, res, next) => {
       return res.status(400).json({ error: "NPI must be exactly 10 digits" });
     if (rest.caqh_id && !/^\d{1,9}$/.test(rest.caqh_id))
       return res.status(400).json({ error: "CAQH ID must be up to 9 digits" });
+    if (
+      rest.credentialing_status &&
+      !Doctor.VALID_STATUSES.has(rest.credentialing_status)
+    )
+      return res
+        .status(400)
+        .json({ error: "Invalid credentialing status" });
     const fields = { first_name, last_name, ...rest };
     const result = Doctor.create(fields);
     const doctor = Doctor.findById(result.lastInsertRowid);
@@ -92,6 +99,11 @@ router.patch("/:id", authenticate, (req, res, next) => {
       delete update.credentialing_status;
       delete update.assigned_worker_id;
     }
+    if (
+      update.credentialing_status &&
+      !Doctor.VALID_STATUSES.has(update.credentialing_status)
+    )
+      return res.status(400).json({ error: "Invalid credentialing status" });
     Doctor.update(id, update);
     res.json(Doctor.findById(id));
   } catch (err) {
