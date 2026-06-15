@@ -11,7 +11,7 @@ router.get("/", authenticate, (req, res, next) => {
     const { doctorId, limit } = req.query;
     const alerts = AlertLog.findAll({
       doctorId: doctorId ? parseInt(doctorId) : undefined,
-      limit: limit ? parseInt(limit) : 100,
+      limit: Math.min(parseInt(limit) || 100, 500),
     });
     res.json(alerts);
   } catch (err) {

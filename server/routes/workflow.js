@@ -84,6 +84,10 @@ router.patch("/step/:stepId", authenticate, (req, res, next) => {
     if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id) {
       return res.status(403).json({ error: "Not authorized to modify this workflow" });
     }
+    const VALID_STEP_STATUSES = ["pending", "in_progress", "complete", "blocked"];
+    if (req.body.status && !VALID_STEP_STATUSES.includes(req.body.status)) {
+      return res.status(400).json({ error: "Invalid step status" });
+    }
     const instance = Workflow.getInstance(doctorId);
     if (!instance) return res.status(404).json({ error: "Workflow not found" });
     Workflow.updateStep(instance.id, stepId, {

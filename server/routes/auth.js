@@ -10,6 +10,10 @@ const { authenticate, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
+// Pre-computed dummy hash — ensures bcrypt.compare always runs even for unknown emails,
+// preventing user enumeration via response-time difference.
+const DUMMY_HASH = bcrypt.hashSync("dummy-timing-protection", 12);
+
 // POST /api/auth/login
 router.post("/login", async (req, res, next) => {
   try {
@@ -18,10 +22,8 @@ router.post("/login", async (req, res, next) => {
       return res.status(400).json({ error: "Email and password required" });
 
     const user = User.findByEmail(email);
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
-
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+    const valid = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
+    if (!user || !valid) return res.status(401).json({ error: "Invalid credentials" });
 
     const payload = {
       id: user.id,

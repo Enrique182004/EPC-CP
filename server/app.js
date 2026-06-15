@@ -35,9 +35,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve uploaded files (protected in real app, served directly here for simplicity)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);

@@ -1,4 +1,6 @@
 const db = require("../config/database");
+const path = require("path");
+const fs = require("fs");
 
 const DOC_TYPES = [
   "liability_insurance",
@@ -101,6 +103,9 @@ const addVersion = (
       const toDelete = old.slice(0, old.length - 3);
       for (const v of toDelete) {
         db.prepare(`DELETE FROM document_versions WHERE id = ?`).run(v.id);
+        try {
+          fs.unlinkSync(path.join(__dirname, "..", v.file_path));
+        } catch (_) {}
       }
     }
 

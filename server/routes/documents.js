@@ -23,14 +23,11 @@ const ALLOWED_MIME_TYPES = new Set([
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const doctorId = parseInt(req.params.id);
-    if (!doctorId)
-      return cb(new Error("Invalid doctor ID"));
-    const dir = path.join(
-      __dirname,
-      "../uploads",
-      String(doctorId),
-      req.params.type,
-    );
+    if (!doctorId) return cb(new Error("Invalid doctor ID"));
+    const docType = req.params.type;
+    if (!Document.DOC_TYPES.includes(docType))
+      return cb(new Error("Invalid document type"));
+    const dir = path.join(__dirname, "../uploads", String(doctorId), docType);
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -124,8 +121,12 @@ router.get("/:type/versions", authenticate, (req, res, next) => {
 // GET /api/doctors/:id/documents/:type/download/:versionId
 router.get("/:type/download/:versionId", authenticate, (req, res, next) => {
   try {
+    const doctorId = parseInt(req.params.id);
+    const doc = Document.findByType(doctorId, req.params.type);
+    if (!doc) return res.status(404).json({ error: "Document not found" });
     const version = Document.getVersionById(parseInt(req.params.versionId));
-    if (!version) return res.status(404).json({ error: "Version not found" });
+    if (!version || version.document_id !== doc.id)
+      return res.status(404).json({ error: "Version not found" });
     const filePath = path.join(__dirname, "..", version.file_path);
     if (!fs.existsSync(filePath))
       return res.status(404).json({ error: "File not found on disk" });

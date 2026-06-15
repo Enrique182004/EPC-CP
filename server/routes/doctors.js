@@ -23,7 +23,7 @@ router.get("/", authenticate, (req, res, next) => {
 });
 
 // POST /api/doctors
-router.post("/", authenticate, (req, res, next) => {
+router.post("/", authenticate, requireRole("admin"), (req, res, next) => {
   try {
     const { first_name, last_name, ...rest } = req.body;
     if (!first_name || !last_name)
@@ -60,6 +60,9 @@ router.patch("/:id", authenticate, (req, res, next) => {
     const id = parseInt(req.params.id);
     const doctor = Doctor.findById(id);
     if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    if (req.user.role !== "admin" && doctor.assigned_worker_id !== req.user.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     Doctor.update(id, req.body);
     res.json(Doctor.findById(id));
   } catch (err) {

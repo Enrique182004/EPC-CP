@@ -31,9 +31,10 @@ router.patch("/", authenticate, (req, res, next) => {
     TdiApplication.upsert(doctorId);
     TdiApplication.updateStatus(doctorId, { status, notes });
 
-    // If signed, mark doctor's tdi_completed flag
-    if (status === "signed") {
+    if (status === "signed" || status === "filed") {
       Doctor.update(doctorId, { tdi_completed: 1 });
+    } else if (status === "not_started" || status === "sent_to_doctor") {
+      Doctor.update(doctorId, { tdi_completed: 0 });
     }
 
     res.json(TdiApplication.findByDoctor(doctorId));

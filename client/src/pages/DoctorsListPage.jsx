@@ -24,7 +24,7 @@ export default function DoctorsListPage() {
         search: search || undefined,
         status: status || undefined,
       }),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 
   return (

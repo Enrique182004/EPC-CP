@@ -295,7 +295,10 @@ export default function DoctorDetailPage() {
                   setForm((p) => ({ ...p, ...f }));
                   doctors
                     .update(id, f)
-                    .then(() => qc.invalidateQueries(["doctor", id]));
+                    .then(() => qc.invalidateQueries(["doctor", id]))
+                    .catch((err) =>
+                      setMsg(err.response?.data?.error || "Save failed"),
+                    );
                 }}
               />
             )}

@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { auth as authApi } from "../api/index.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function UsersPage() {
+  const { user } = useAuth();
   const qc = useQueryClient();
+
+  if (user?.role !== "admin") {
+    return (
+      <div className="text-center py-20 text-gray-500">
+        Access denied. Admins only.
+      </div>
+    );
+  }
   const [form, setForm] = useState({
     email: "",
     password: "",
