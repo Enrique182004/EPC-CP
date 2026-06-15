@@ -106,8 +106,13 @@ export default function DocumentsPage() {
   };
 
   const handleStatusChange = async (docType, status) => {
-    await documents.updateStatus(id, docType, { status });
-    qc.invalidateQueries({ queryKey: ["documents", id] });
+    try {
+      await documents.updateStatus(id, docType, { status });
+      qc.invalidateQueries({ queryKey: ["documents", id] });
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Failed to update status.");
+      setTimeout(() => setMsg(""), 4000);
+    }
   };
 
   const handleReminder = async () => {

@@ -69,9 +69,11 @@ export default function DoctorsListPage() {
       ) : data.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-gray-400 mb-4">No doctors found.</p>
-          <Link to="/doctors/new" className="btn-primary">
-            Add First Doctor
-          </Link>
+          {user?.role === "admin" && (
+            <Link to="/doctors/new" className="btn-primary">
+              Add First Doctor
+            </Link>
+          )}
         </div>
       ) : (
         <div className="card p-0 overflow-hidden">
