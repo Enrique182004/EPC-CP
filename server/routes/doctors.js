@@ -84,6 +84,10 @@ router.patch("/:id", authenticate, (req, res, next) => {
       return res.status(400).json({ error: "NPI must be exactly 10 digits" });
     if (update.caqh_id && !/^\d{1,9}$/.test(update.caqh_id))
       return res.status(400).json({ error: "CAQH ID must be up to 9 digits" });
+    if (update.ssn_last4 && !/^\d{4}$/.test(update.ssn_last4))
+      return res
+        .status(400)
+        .json({ error: "SSN last 4 must be exactly 4 digits" });
     if (req.user.role !== "admin") {
       delete update.credentialing_status;
       delete update.assigned_worker_id;
