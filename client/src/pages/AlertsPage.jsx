@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { alerts } from "../api/index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Link } from "react-router-dom";

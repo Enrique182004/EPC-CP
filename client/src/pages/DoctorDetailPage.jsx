@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctors, auth as authApi } from "../api/index.js";
 import { CREDENTIALING_STATUSES, STATUS_LABELS } from "../utils/constants.js";
 import PersonalInfoTab from "../components/doctor/tabs/PersonalInfoTab.jsx";
