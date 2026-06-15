@@ -247,12 +247,11 @@ disclosures.put("/", authenticate, requireDoctorAccess, (req, res, next) => {
     const tx = db.transaction(() => {
       for (const d of disclosureData) {
         if (!validKeys.has(d.question_key)) continue;
-        upsert.run(
-          doctorId,
-          d.question_key,
-          d.answer ? 1 : 0,
-          d.explanation || null,
-        );
+        const explanation =
+          typeof d.explanation === "string"
+            ? d.explanation.slice(0, 2000) || null
+            : null;
+        upsert.run(doctorId, d.question_key, d.answer ? 1 : 0, explanation);
       }
     });
     tx();
