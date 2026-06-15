@@ -12,8 +12,7 @@ const findAll = ({ search, status, workerId } = {}) => {
   let q = `SELECT d.*, u.name as worker_name FROM doctors d LEFT JOIN users u ON d.assigned_worker_id = u.id WHERE 1=1`;
   const params = [];
   if (search) {
-    q += ` AND (d.first_name LIKE ? OR d.last_name LIKE ? OR d.npi LIKE ? OR d.caqh_id LIKE ?)`;
-    // Escape LIKE wildcards in the search string to treat them as literals
+    q += ` AND (d.first_name LIKE ? ESCAPE '\\' OR d.last_name LIKE ? ESCAPE '\\' OR d.npi LIKE ? ESCAPE '\\' OR d.caqh_id LIKE ? ESCAPE '\\')`;
     const escaped = String(search).replace(/[%_\\]/g, "\\$&");
     const s = `%${escaped}%`;
     params.push(s, s, s, s);
