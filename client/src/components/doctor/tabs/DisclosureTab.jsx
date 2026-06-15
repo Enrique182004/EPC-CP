@@ -37,8 +37,8 @@ export default function DisclosureTab({ doctorId }) {
       qc.invalidateQueries({ queryKey: ["disclosures", doctorId] });
       setMsg("Disclosures saved.");
       setTimeout(() => setMsg(""), 3000);
-    } catch {
-      setMsg("Save failed.");
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Save failed.");
     }
   };
 

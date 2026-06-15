@@ -124,8 +124,8 @@ export default function DocumentsPage() {
           ? `Reminder sent for ${result.missing.length} missing docs.`
           : "No missing forms.",
       );
-    } catch {
-      setMsg("Failed to send reminder.");
+    } catch (err) {
+      setMsg(err.response?.data?.error || "Failed to send reminder.");
     }
     setSendingReminder(false);
     setTimeout(() => setMsg(""), 5000);
