@@ -25,19 +25,23 @@ function signState(userId) {
 }
 
 function verifyState(state) {
-  const dot = state.lastIndexOf(".");
-  if (dot === -1) return null;
-  const id = state.slice(0, dot);
-  const sig = state.slice(dot + 1);
-  const expected = crypto
-    .createHmac("sha256", process.env.JWT_SECRET || "dev_secret_change_me")
-    .update(id)
-    .digest("hex");
-  const valid = crypto.timingSafeEqual(
-    Buffer.from(sig, "hex"),
-    Buffer.from(expected, "hex"),
-  );
-  return valid ? parseInt(id) : null;
+  try {
+    const dot = state.lastIndexOf(".");
+    if (dot === -1) return null;
+    const id = state.slice(0, dot);
+    const sig = state.slice(dot + 1);
+    const expected = crypto
+      .createHmac("sha256", process.env.JWT_SECRET || "dev_secret_change_me")
+      .update(id)
+      .digest("hex");
+    const sigBuf = Buffer.from(sig, "hex");
+    const expBuf = Buffer.from(expected, "hex");
+    if (sigBuf.length !== expBuf.length) return null;
+    const valid = crypto.timingSafeEqual(sigBuf, expBuf);
+    return valid ? parseInt(id) : null;
+  } catch {
+    return null;
+  }
 }
 
 function getAuthUrl(userId) {
@@ -61,4 +65,10 @@ function getCalendar(refreshToken) {
   return google.calendar({ version: "v3", auth });
 }
 
-module.exports = { getAuthUrl, exchangeCode, getCalendar, createOAuth2Client, verifyState };
+module.exports = {
+  getAuthUrl,
+  exchangeCode,
+  getCalendar,
+  createOAuth2Client,
+  verifyState,
+};
