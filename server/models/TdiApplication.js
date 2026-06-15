@@ -12,9 +12,17 @@ const upsert = (doctorId) =>
 
 const updateStatus = (doctorId, { status, notes }) => {
   const now = new Date().toISOString();
-  const sets = ["status = ?", "notes = ?", "updated_at = CURRENT_TIMESTAMP"];
-  const vals = [status, notes || null];
+  const sets = [];
+  const vals = [];
 
+  if (status !== undefined) {
+    sets.push("status = ?");
+    vals.push(status);
+  }
+  if (notes !== undefined) {
+    sets.push("notes = ?");
+    vals.push(notes || null);
+  }
   if (status === "sent_to_doctor") {
     sets.push("sent_at = ?");
     vals.push(now);
@@ -27,10 +35,14 @@ const updateStatus = (doctorId, { status, notes }) => {
     sets.push("filed_at = ?");
     vals.push(now);
   }
+  if (!sets.length) return;
+  sets.push("updated_at = CURRENT_TIMESTAMP");
 
-  const info = db.prepare(
-    `UPDATE tdi_applications SET ${sets.join(", ")} WHERE doctor_id = ?`,
-  ).run(...vals, doctorId);
+  const info = db
+    .prepare(
+      `UPDATE tdi_applications SET ${sets.join(", ")} WHERE doctor_id = ?`,
+    )
+    .run(...vals, doctorId);
   if (info.changes === 0) {
     const err = new Error("TDI record not found");
     err.status = 404;

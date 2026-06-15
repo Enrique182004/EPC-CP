@@ -173,12 +173,21 @@ router.get(
   },
 );
 
+const VALID_DOC_STATUSES = new Set([
+  "missing",
+  "uploaded",
+  "approved",
+  "expired",
+]);
+
 // PATCH /api/doctors/:id/documents/:type
 router.patch("/:type", authenticate, requireDoctorAccess, (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id);
     const doc = Document.findByType(doctorId, req.params.type);
     if (!doc) return res.status(404).json({ error: "Document not found" });
+    if (req.body.status && !VALID_DOC_STATUSES.has(req.body.status))
+      return res.status(400).json({ error: "Invalid document status" });
     Document.updateStatus(
       doc.id,
       req.body.status || doc.status,
