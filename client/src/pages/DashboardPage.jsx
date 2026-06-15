@@ -53,7 +53,7 @@ export default function DashboardPage() {
     doctorGrid = [],
     missingForms = [],
     pendingTdi = [],
-    workflowIssues = [],
+    stalledWorkflows = [],
     totals = {},
   } = data;
 
@@ -238,31 +238,37 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Workflow Issues */}
+        {/* Stalled Workflows */}
         <div className="card">
           <h2 className="text-base font-semibold mb-3 text-gray-800">
-            ⏸ On-Hold Workflows
+            ⏳ Stalled Workflows (in progress, 30+ days idle)
           </h2>
-          {workflowIssues.length === 0 ? (
-            <p className="text-sm text-gray-400">No workflows on hold.</p>
+          {stalledWorkflows.length === 0 ? (
+            <p className="text-sm text-gray-400">No stalled workflows.</p>
           ) : (
             <div className="space-y-2">
-              {workflowIssues.map((r) => (
-                <div
-                  key={r.id}
-                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-                >
-                  <Link
-                    to={`/doctors/${r.id}/workflow`}
-                    className="text-sm font-medium text-blue-700 hover:underline"
+              {stalledWorkflows.map((r) => {
+                const daysIdle = Math.floor(
+                  (Date.now() - new Date(r.updated_at).getTime()) /
+                    (1000 * 60 * 60 * 24),
+                );
+                return (
+                  <div
+                    key={r.id}
+                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                   >
-                    Dr. {r.first_name} {r.last_name}
-                  </Link>
-                  <span className="badge-yellow">
-                    Step {r.current_step} — On Hold
-                  </span>
-                </div>
-              ))}
+                    <Link
+                      to={`/doctors/${r.id}/workflow`}
+                      className="text-sm font-medium text-blue-700 hover:underline"
+                    >
+                      Dr. {r.first_name} {r.last_name}
+                    </Link>
+                    <span className="badge-yellow">
+                      Step {r.current_step} — {daysIdle} days idle
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

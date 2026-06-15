@@ -108,6 +108,7 @@ router.get("/", authenticate, (req, res, next) => {
         ${wf}
       GROUP BY d.id
       ORDER BY missing_count DESC
+      LIMIT 20
     `,
       )
       .all(wp);
@@ -122,20 +123,23 @@ router.get("/", authenticate, (req, res, next) => {
       WHERE t.status != 'signed' AND t.status != 'filed'
         ${wf}
       ORDER BY d.last_name
+      LIMIT 20
     `,
       )
       .all(wp);
 
-    // Workflow issues
-    const workflowIssues = db
+    // Stalled workflows (in_progress, no update in 30+ days)
+    const stalledWorkflows = db
       .prepare(
         `
       SELECT d.id, d.first_name, d.last_name, wi.current_step, wi.status, wi.updated_at
       FROM workflow_instances wi
       JOIN doctors d ON wi.doctor_id = d.id
-      WHERE wi.status = 'on_hold'
+      WHERE wi.status = 'in_progress'
+        AND datetime(wi.updated_at) <= datetime('now', '-30 days')
         ${wf}
       ORDER BY wi.updated_at
+      LIMIT 20
     `,
       )
       .all(wp);
@@ -152,7 +156,7 @@ router.get("/", authenticate, (req, res, next) => {
       doctorGrid,
       missingForms,
       pendingTdi,
-      workflowIssues,
+      stalledWorkflows,
       totals: {
         doctors: totalDoctors,
         pending:
