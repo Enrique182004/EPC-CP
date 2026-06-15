@@ -293,21 +293,7 @@ export default function DoctorDetailPage() {
 
           <div>
             {activeTab === "personal" && (
-              <PersonalInfoTab
-                doctorId={id}
-                doctor={doctor}
-                onUpdate={(f) => {
-                  setForm((p) => ({ ...p, ...f }));
-                  doctors
-                    .update(id, f)
-                    .then(() =>
-                      qc.invalidateQueries({ queryKey: ["doctor", id] }),
-                    )
-                    .catch((err) =>
-                      setMsg(err.response?.data?.error || "Save failed"),
-                    );
-                }}
-              />
+              <PersonalInfoTab doctorId={id} doctor={doctor} />
             )}
             {activeTab === "ids" && <ProfessionalIdsTab doctorId={id} />}
             {activeTab === "education" && <EducationTab doctorId={id} />}
