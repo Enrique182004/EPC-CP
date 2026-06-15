@@ -43,10 +43,23 @@ const findByType = (doctorId, docType) => {
     .get(doctorId, docType);
 };
 
-const updateStatus = (id, status, notes) => {
-  db.prepare(
-    `UPDATE documents SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-  ).run(status, notes || null, id);
+const updateStatus = (id, { status, notes } = {}) => {
+  const sets = [];
+  const vals = [];
+  if (status !== undefined) {
+    sets.push("status = ?");
+    vals.push(status);
+  }
+  if (notes !== undefined) {
+    sets.push("notes = ?");
+    vals.push(notes || null);
+  }
+  if (!sets.length) return;
+  sets.push("updated_at = CURRENT_TIMESTAMP");
+  db.prepare(`UPDATE documents SET ${sets.join(", ")} WHERE id = ?`).run(
+    ...vals,
+    id,
+  );
 };
 
 const getVersions = (documentId) =>

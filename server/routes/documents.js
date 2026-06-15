@@ -188,11 +188,10 @@ router.patch("/:type", authenticate, requireDoctorAccess, (req, res, next) => {
     if (!doc) return res.status(404).json({ error: "Document not found" });
     if (req.body.status && !VALID_DOC_STATUSES.has(req.body.status))
       return res.status(400).json({ error: "Invalid document status" });
-    Document.updateStatus(
-      doc.id,
-      req.body.status || doc.status,
-      req.body.notes,
-    );
+    Document.updateStatus(doc.id, {
+      status: req.body.status,
+      notes: req.body.notes,
+    });
     res.json({ message: "Updated" });
   } catch (err) {
     next(err);

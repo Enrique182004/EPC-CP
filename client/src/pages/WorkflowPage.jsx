@@ -29,7 +29,7 @@ export default function WorkflowPage() {
     queryKey: ["doctor", id],
     queryFn: () => doctors.get(id),
   });
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["workflow", id],
     queryFn: () => workflow.get(id),
   });

@@ -43,20 +43,15 @@ const getStepInstances = (workflowId) =>
 
 const updateStep = (workflowId, stepId, { status, notes, completed_by }) => {
   const completedAt = status === "complete" ? new Date().toISOString() : null;
+  const sets = ["status = ?", "completed_by = ?", "completed_at = ?"];
+  const vals = [status, completed_by || null, completedAt];
+  if (notes !== undefined) {
+    sets.push("notes = ?");
+    vals.push(notes || null);
+  }
   db.prepare(
-    `
-    UPDATE workflow_step_instances
-    SET status = ?, notes = ?, completed_by = ?, completed_at = ?
-    WHERE workflow_id = ? AND step_id = ?
-  `,
-  ).run(
-    status,
-    notes || null,
-    completed_by || null,
-    completedAt,
-    workflowId,
-    stepId,
-  );
+    `UPDATE workflow_step_instances SET ${sets.join(", ")} WHERE workflow_id = ? AND step_id = ?`,
+  ).run(...vals, workflowId, stepId);
 };
 
 const advance = (workflowId, nextStep) => {
@@ -78,12 +73,6 @@ const complete = (workflowId) => {
   ).run(workflowId);
 };
 
-const updateStatus = (workflowId, status) => {
-  db.prepare(
-    `UPDATE workflow_instances SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-  ).run(status, workflowId);
-};
-
 module.exports = {
   getSteps,
   getInstance,
@@ -92,5 +81,4 @@ module.exports = {
   updateStep,
   advance,
   complete,
-  updateStatus,
 };
