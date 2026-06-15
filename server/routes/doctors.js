@@ -35,6 +35,10 @@ router.post("/", authenticate, requireRole("admin"), (req, res, next) => {
     const { first_name, last_name, ...rest } = req.body;
     if (!first_name || !last_name)
       return res.status(400).json({ error: "First and last name required" });
+    if (rest.npi && !/^\d{10}$/.test(rest.npi))
+      return res.status(400).json({ error: "NPI must be exactly 10 digits" });
+    if (rest.caqh_id && !/^\d{1,9}$/.test(rest.caqh_id))
+      return res.status(400).json({ error: "CAQH ID must be up to 9 digits" });
     const fields = { first_name, last_name, ...rest };
     const result = Doctor.create(fields);
     const doctor = Doctor.findById(result.lastInsertRowid);
@@ -76,7 +80,14 @@ router.patch("/:id", authenticate, (req, res, next) => {
       return res.status(403).json({ error: "Forbidden" });
     }
     const update = { ...req.body };
-    if (req.user.role !== "admin") delete update.credentialing_status;
+    if (update.npi && !/^\d{10}$/.test(update.npi))
+      return res.status(400).json({ error: "NPI must be exactly 10 digits" });
+    if (update.caqh_id && !/^\d{1,9}$/.test(update.caqh_id))
+      return res.status(400).json({ error: "CAQH ID must be up to 9 digits" });
+    if (req.user.role !== "admin") {
+      delete update.credentialing_status;
+      delete update.assigned_worker_id;
+    }
     Doctor.update(id, update);
     res.json(Doctor.findById(id));
   } catch (err) {

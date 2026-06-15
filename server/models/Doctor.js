@@ -1,14 +1,24 @@
 const db = require("../config/database");
 
+const VALID_STATUSES = new Set([
+  "pending",
+  "in_progress",
+  "complete",
+  "expired",
+  "on_hold",
+]);
+
 const findAll = ({ search, status, workerId } = {}) => {
   let q = `SELECT d.*, u.name as worker_name FROM doctors d LEFT JOIN users u ON d.assigned_worker_id = u.id WHERE 1=1`;
   const params = [];
   if (search) {
     q += ` AND (d.first_name LIKE ? OR d.last_name LIKE ? OR d.npi LIKE ? OR d.caqh_id LIKE ?)`;
-    const s = `%${search}%`;
+    // Escape LIKE wildcards in the search string to treat them as literals
+    const escaped = String(search).replace(/[%_\\]/g, "\\$&");
+    const s = `%${escaped}%`;
     params.push(s, s, s, s);
   }
-  if (status) {
+  if (status && VALID_STATUSES.has(status)) {
     q += ` AND d.credentialing_status = ?`;
     params.push(status);
   }
@@ -28,13 +38,29 @@ const findById = (id) =>
     .get(id);
 
 const ALLOWED_CREATE_FIELDS = [
-  "first_name", "middle_name", "last_name", "suffix",
-  "date_of_birth", "ssn_last4", "gender",
-  "home_address", "home_city", "home_state", "home_zip",
-  "home_phone", "cell_phone", "personal_email",
-  "npi", "caqh_id", "work_email", "primary_specialty",
-  "credentialing_status", "assigned_worker_id",
-  "tdi_completed", "recredentialing_due_date", "notes",
+  "first_name",
+  "middle_name",
+  "last_name",
+  "suffix",
+  "date_of_birth",
+  "ssn_last4",
+  "gender",
+  "home_address",
+  "home_city",
+  "home_state",
+  "home_zip",
+  "home_phone",
+  "cell_phone",
+  "personal_email",
+  "npi",
+  "caqh_id",
+  "work_email",
+  "primary_specialty",
+  "credentialing_status",
+  "assigned_worker_id",
+  "tdi_completed",
+  "recredentialing_due_date",
+  "notes",
 ];
 
 const create = (fields) => {
