@@ -53,7 +53,9 @@ const getVersions = (documentId) =>
   db
     .prepare(
       `
-    SELECT dv.*, u.name as uploader_name
+    SELECT dv.id, dv.document_id, dv.version_number, dv.file_name,
+           dv.file_size, dv.mime_type, dv.uploaded_by, dv.uploaded_at,
+           dv.is_current, u.name as uploader_name
     FROM document_versions dv
     LEFT JOIN users u ON dv.uploaded_by = u.id
     WHERE dv.document_id = ?
