@@ -43,7 +43,14 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="doctors" element={<DoctorsListPage />} />
-        <Route path="doctors/new" element={<DoctorDetailPage />} />
+        <Route
+          path="doctors/new"
+          element={
+            <ProtectedRoute role="admin">
+              <DoctorDetailPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="doctors/:id" element={<DoctorDetailPage />} />
         <Route path="doctors/:id/documents" element={<DocumentsPage />} />
         <Route path="doctors/:id/workflow" element={<WorkflowPage />} />

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { doctors } from "../api/index.js";
 import { STATUS_LABELS, CREDENTIALING_STATUSES } from "../utils/constants.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import clsx from "clsx";
 
 const statusColor = {
@@ -14,6 +15,7 @@ const statusColor = {
 
 export default function DoctorsListPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
@@ -31,9 +33,11 @@ export default function DoctorsListPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Doctors</h1>
-        <Link to="/doctors/new" className="btn-primary">
-          + Add Doctor
-        </Link>
+        {user?.role === "admin" && (
+          <Link to="/doctors/new" className="btn-primary">
+            + Add Doctor
+          </Link>
+        )}
       </div>
 
       <div className="card mb-4">
