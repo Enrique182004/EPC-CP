@@ -13,7 +13,7 @@ async function seed() {
       VALUES ('admin@epc.local', ?, 'admin', 'System Administrator')
     `,
     ).run(hash);
-    console.log("[Seed] Admin user created: admin@epc.local / Admin1234!");
+    console.log("[Seed] Admin user created: admin@epc.local");
     console.log("[Seed] IMPORTANT: Change this password after first login!");
   } catch (err) {
     console.error("[Seed] Error:", err.message);
