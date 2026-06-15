@@ -32,6 +32,19 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
+const ALLOWED_EXTENSIONS = new Set([
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+]);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const doctorId = parseInt(req.params.id);
@@ -50,7 +63,8 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (ALLOWED_MIME_TYPES.has(file.mimetype)) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ALLOWED_MIME_TYPES.has(file.mimetype) && ALLOWED_EXTENSIONS.has(ext)) {
     cb(null, true);
   } else {
     cb(
@@ -120,34 +134,44 @@ router.post(
 );
 
 // GET /api/doctors/:id/documents/:type/versions
-router.get("/:type/versions", authenticate, requireDoctorAccess, (req, res, next) => {
-  try {
-    const doctorId = parseInt(req.params.id);
-    const doc = Document.findByType(doctorId, req.params.type);
-    if (!doc) return res.status(404).json({ error: "Document not found" });
-    res.json(Document.getVersions(doc.id));
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  "/:type/versions",
+  authenticate,
+  requireDoctorAccess,
+  (req, res, next) => {
+    try {
+      const doctorId = parseInt(req.params.id);
+      const doc = Document.findByType(doctorId, req.params.type);
+      if (!doc) return res.status(404).json({ error: "Document not found" });
+      res.json(Document.getVersions(doc.id));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // GET /api/doctors/:id/documents/:type/download/:versionId
-router.get("/:type/download/:versionId", authenticate, requireDoctorAccess, (req, res, next) => {
-  try {
-    const doctorId = parseInt(req.params.id);
-    const doc = Document.findByType(doctorId, req.params.type);
-    if (!doc) return res.status(404).json({ error: "Document not found" });
-    const version = Document.getVersionById(parseInt(req.params.versionId));
-    if (!version || version.document_id !== doc.id)
-      return res.status(404).json({ error: "Version not found" });
-    const filePath = path.join(__dirname, "..", version.file_path);
-    if (!fs.existsSync(filePath))
-      return res.status(404).json({ error: "File not found on disk" });
-    res.download(filePath, version.file_name);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  "/:type/download/:versionId",
+  authenticate,
+  requireDoctorAccess,
+  (req, res, next) => {
+    try {
+      const doctorId = parseInt(req.params.id);
+      const doc = Document.findByType(doctorId, req.params.type);
+      if (!doc) return res.status(404).json({ error: "Document not found" });
+      const version = Document.getVersionById(parseInt(req.params.versionId));
+      if (!version || version.document_id !== doc.id)
+        return res.status(404).json({ error: "Version not found" });
+      const filePath = path.join(__dirname, "..", version.file_path);
+      if (!fs.existsSync(filePath))
+        return res.status(404).json({ error: "File not found on disk" });
+      res.download(filePath, version.file_name);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // PATCH /api/doctors/:id/documents/:type
 router.patch("/:type", authenticate, requireDoctorAccess, (req, res, next) => {
